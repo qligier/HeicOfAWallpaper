@@ -11,23 +11,22 @@ import java.util.List;
 public class RuntimeConfiguration {
 
     /**
-     * The number of monitors connected.
-     */
-    private transient int numberOfConnected;
-
-    /**
      * Whether the light or dark theme is enabled.
      */
-    private transient boolean isLightThemeEnabled;
+    private boolean isLightThemeEnabled;
 
     /**
      * The details about connected monitors.
      */
-    private transient List<MonitorDetail> monitorDetails;
+    private List<Monitor> monitors;
 
-    public record MonitorDetail(String devicePath,
-                                String deviceName,
-                                int width,
-                                int height) {
+    public int getNumberOfMonitors() {
+        return this.monitors.size();
+    }
+
+    public record Monitor(String devicePath,
+                          String deviceName,
+                          int width,
+                          int height) {
     }
 }

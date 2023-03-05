@@ -1,7 +1,7 @@
 package ch.qligier.heicofawallpaper.xmp;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
-import ch.qligier.heicofawallpaper.heic.SolarWallpaperMetadata;
+import ch.qligier.heicofawallpaper.model.SolarWallpaper;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.thebuzzmedia.exiftool.ExifTool;
@@ -38,9 +38,9 @@ public class XmpExtractor {
 
     public Map<Tag, String> getMetadata(final File imageFile) throws IOException {
         return this.exifTool.getImageMeta(imageFile, List.of(CustomTag.XMP_SOLAR,
-                                                             CustomTag.XMP_H24,
-                                                             StandardTag.IMAGE_WIDTH,
-                                                             StandardTag.IMAGE_HEIGHT));
+            CustomTag.XMP_H24,
+            StandardTag.IMAGE_WIDTH,
+            StandardTag.IMAGE_HEIGHT));
     }
 
     public void parseSolarMetadata(final String solar)
@@ -53,14 +53,14 @@ public class XmpExtractor {
             throw new InvalidDynamicWallpaperException("The solar metadata is missing the 'ap' or 'si' keys");
         }
         final List<HashMap<String, Object>> si = getDictionaryArrayForKey(root, "si");
-        final List<SolarWallpaperMetadata.SolarFrameMetadata> frames = new ArrayList<>();
+        final List<SolarWallpaper.SolarFrameMetadata> frames = new ArrayList<>();
         int expectedIndex = 0;
 
         for (final HashMap<String, Object> entry : si) {
             /*if (entryDict.containsKey("i") && entryDict.get("i")) {
                 throw new InvalidDynamicWallpaperException("The index");
             }*/
-            frames.add(new SolarWallpaperMetadata.SolarFrameMetadata());
+            frames.add(new SolarWallpaper.SolarFrameMetadata());
         }
     }
 

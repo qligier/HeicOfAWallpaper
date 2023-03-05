@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.heic;
+package ch.qligier.heicofawallpaper.model;
 
 import com.dd.plist.NSDictionary;
 
@@ -15,7 +15,7 @@ import java.util.Objects;
  * @see <a href="https://github.com/mczachurski/wallpapper">This is simple console application for macOS to create
  * dynamic wallpapers introduced in macOS Mojave.</a>
  **/
-public class SolarWallpaperMetadata {
+public class SolarWallpaper {
 
     /**
      * The metadata for each frame.
@@ -27,17 +27,17 @@ public class SolarWallpaperMetadata {
      *
      * @param frameMetadata The metadata for each frame.
      */
-    public SolarWallpaperMetadata(final List<SolarFrameMetadata> frameMetadata) {
+    public SolarWallpaper(final List<SolarFrameMetadata> frameMetadata) {
         Objects.requireNonNull(frameMetadata, "frameMetadata shall not be null in SolarWallpaperMetadata()");
         this.frameMetadata = new ArrayList<>(frameMetadata);
     }
 
-    public static SolarWallpaperMetadata fromBplist(final NSDictionary bplistDictionnary) {
+    public static SolarWallpaper fromBplist(final NSDictionary bplistDictionnary) {
 
         /*if (frameNumber != frameMetadata.size()) {
             throw new RuntimeException("");
         }*/
-        return new SolarWallpaperMetadata(new ArrayList<>());
+        return new SolarWallpaper(new ArrayList<>());
     }
 
     public static class SolarFrameMetadata {

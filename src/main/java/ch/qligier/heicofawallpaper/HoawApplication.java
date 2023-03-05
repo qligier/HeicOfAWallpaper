@@ -5,6 +5,7 @@ import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
 import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
+import com.google.gson.Gson;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -14,6 +15,9 @@ import javafx.stage.StageStyle;
 
 import java.awt.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +80,7 @@ public class HoawApplication extends Application {
 
         this.runtimeConfiguration = this.loadRuntimeConfiguration();
 
-        FileSystem.ensureDataPathExists();
+        FileSystemService.ensureDataPathExists();
         this.userConfiguration = this.loadUserConfiguration();
     }
 
@@ -103,10 +107,10 @@ public class HoawApplication extends Application {
     private RuntimeConfiguration loadRuntimeConfiguration() {
         final int numberOfConnectedMonitors = this.desktopWallpaperManager.getMonitorDevicePathCount();
         final GraphicsDevice[] monitors = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-        final List<RuntimeConfiguration.MonitorDetail> monitorDetails = new ArrayList<>(monitors.length);
+        final List<RuntimeConfiguration.Monitor> monitorDetails = new ArrayList<>(monitors.length);
         for (final GraphicsDevice monitor : monitors) {
             final DisplayMode displayMode = monitor.getDisplayMode();
-            monitorDetails.add(new RuntimeConfiguration.MonitorDetail(
+            monitorDetails.add(new RuntimeConfiguration.Monitor(
                 monitor.getIDstring(),
                 "",
                 displayMode.getWidth(),
@@ -120,13 +124,25 @@ public class HoawApplication extends Application {
      * Loads the user configuration from disk and returns it.
      */
     private UserConfiguration loadUserConfiguration() {
-        return null;
+        final Gson gson = new Gson();
+        try {
+            final String serialized = Files.readString(FileSystemService.getUserConfigurationPath(), StandardCharsets.UTF_8);
+            return gson.fromJson(serialized, UserConfiguration.class);
+        } catch (final IOException exception) {
+            return new UserConfiguration();
+        }
     }
 
     /**
      * Saves the user configuration to disk.
      */
-    private void saveUserConfiguration() {
-
+    private void saveUserConfiguration(final UserConfiguration userConfiguration) throws IOException {
+        final Gson gson = new Gson();
+        final String serialized = gson.toJson(userConfiguration);
+        Files.writeString(
+            FileSystemService.getUserConfigurationPath(),
+            serialized,
+            StandardOpenOption.TRUNCATE_EXISTING
+        );
     }
 }

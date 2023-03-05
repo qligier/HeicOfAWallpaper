@@ -1,5 +1,6 @@
 module ch.qligier.heicofawallpaper {
     requires java.desktop;
+    requires java.logging;
 
     // JavaFX
     requires javafx.controls;
@@ -17,9 +18,8 @@ module ch.qligier.heicofawallpaper {
     requires dd.plist;
     requires com.github.mjeanroy.exiftool;
     requires org.jspecify;
+    requires com.google.gson;
 
     opens ch.qligier.heicofawallpaper to javafx.fxml;
     exports ch.qligier.heicofawallpaper;
-    exports ch.qligier.heicofawallpaper.configuration;
-    opens ch.qligier.heicofawallpaper.configuration to javafx.fxml;
 }
