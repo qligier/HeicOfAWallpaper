@@ -6,19 +6,12 @@ import java.util.List;
  * The runtime configuration of the application. It shall not be saved but shall be regenerated when the application
  * launches.
  *
+ * @param isLightThemeEnabled Whether the light or dark theme is enabled.
+ * @param monitors            The details about connected monitors.
  * @author Quentin Ligier
  **/
-public class RuntimeConfiguration {
-
-    /**
-     * Whether the light or dark theme is enabled.
-     */
-    private boolean isLightThemeEnabled;
-
-    /**
-     * The details about connected monitors.
-     */
-    private List<Monitor> monitors;
+public record RuntimeConfiguration(boolean isLightThemeEnabled,
+                                   List<Monitor> monitors) {
 
     public int getNumberOfMonitors() {
         return this.monitors.size();

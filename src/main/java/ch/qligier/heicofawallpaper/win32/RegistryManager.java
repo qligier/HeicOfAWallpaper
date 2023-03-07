@@ -32,21 +32,21 @@ public class RegistryManager {
         var bytes = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet" +
             "\\Enum\\DISPLAY" +
             "\\DEL422F\\1&8713bca&0&UID0\\Device Parameters", "EDID");
-        //System.out.println(EdidUtil.toString(bytes));
+        System.out.println(EdidUtil.toString(bytes));
 
         System.out.println("-------");
 
         bytes = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet" +
             "\\Enum\\DISPLAY" +
             "\\DEL422F\\5&2ff1101f&4&UID4353\\Device Parameters", "EDID");
-        //System.out.println(EdidUtil.toString(bytes));
+        System.out.println(EdidUtil.toString(bytes));
 
         System.out.println("-------");
 
         bytes = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet" +
             "\\Enum\\DISPLAY" +
             "\\DEL422F\\5&2ff1101f&4&UID4356\\Device Parameters", "EDID");
-        //System.out.println(EdidUtil.toString(bytes));
+        System.out.println(EdidUtil.toString(bytes));
 
         System.out.println("-------");
     }
@@ -58,7 +58,7 @@ public class RegistryManager {
      * @return {@code true} if the light theme is enabled, {@code false} if the dark theme is enabled.
      * @see <a href="https://github.com/Dansoftowner/jSystemThemeDetector">Dansoftowner/jSystemThemeDetector</a>
      */
-    public boolean isLightThemeEnabled() {
+    public static boolean isLightThemeEnabled() {
         return !Advapi32Util.registryValueExists(WinReg.HKEY_CURRENT_USER, LIGHT_THEME_PATH, LIGHT_THEME_VALUE)
             || Advapi32Util.registryGetIntValue(WinReg.HKEY_CURRENT_USER, LIGHT_THEME_PATH, LIGHT_THEME_VALUE) == 1;
     }

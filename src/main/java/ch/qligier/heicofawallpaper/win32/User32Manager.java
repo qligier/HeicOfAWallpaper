@@ -1,7 +1,7 @@
 package ch.qligier.heicofawallpaper.win32;
 
 import com.sun.jna.platform.win32.*;
-import org.jspecify.annotations.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The manager for User32.

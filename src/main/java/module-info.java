@@ -17,7 +17,7 @@ module ch.qligier.heicofawallpaper {
     // Other libraries
     requires dd.plist;
     requires com.github.mjeanroy.exiftool;
-    requires org.jspecify;
+    requires org.checkerframework.checker.qual;
     requires com.google.gson;
 
     opens ch.qligier.heicofawallpaper to javafx.fxml;

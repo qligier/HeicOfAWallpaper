@@ -82,11 +82,11 @@
             <version>2.10.1</version>
         </dependency>
 
-        <!-- An artifact of well-named and well-specified annotations to power static analysis checks -->
+        <!-- The Checker Framework enhances Java's type system to make it more powerful and useful -->
         <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
-            <version>0.3.0</version>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId> <!-- MIT -->
+            <version>3.32.0</version>
         </dependency>
 
         <dependency>

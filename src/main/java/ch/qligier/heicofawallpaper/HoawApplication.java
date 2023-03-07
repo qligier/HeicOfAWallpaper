@@ -4,7 +4,12 @@ import ch.qligier.heicofawallpaper.configuration.RuntimeConfiguration;
 import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
 import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
+import ch.qligier.heicofawallpaper.heic.DynamicWallpaperService;
+import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
+import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
+import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
+import ch.qligier.heicofawallpaper.win32.RegistryManager;
 import com.google.gson.Gson;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -12,14 +17,18 @@ import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
+import java.util.*;
 
 /**
  * The main Heic Of a Wallpaper application.
@@ -29,29 +38,39 @@ import java.util.List;
 public class HoawApplication extends Application {
 
     /**
-     * The tray icon manager.
+     * The tray icon manager. The field is assigned in {@link #start(Stage)}.
      */
+    @MonotonicNonNull
     private TrayIconManager trayIcon;
 
     /**
-     * The main JavaFX stage.
+     * The main JavaFX stage. The field is assigned in {@link #start(Stage)}.
      */
+    @MonotonicNonNull
     private Stage mainStage;
 
     /**
-     * The runtime configuration.
+     * The runtime configuration. The field is assigned in {@link #start(Stage)}.
      */
+    @MonotonicNonNull
     private RuntimeConfiguration runtimeConfiguration;
 
     /**
-     * The user configuration.
+     * The user configuration. The field is assigned in {@link #start(Stage)}.
      */
+    @MonotonicNonNull
     private UserConfiguration userConfiguration;
+
+    /**
+     * The field is assigned in {@link #start(Stage)}.
+     */
+    @MonotonicNonNull
+    private DesktopWallpaperManager desktopWallpaperManager;
 
     /**
      *
      */
-    private DesktopWallpaperManager desktopWallpaperManager;
+    private final DynamicWallpaperService dynamicWallpaperService = new DynamicWallpaperService();
 
     /**
      * Entry point for the CLI.
@@ -117,7 +136,7 @@ public class HoawApplication extends Application {
                 displayMode.getHeight()
             ));
         }
-        return null;
+        return new RuntimeConfiguration(true, monitorDetails);
     }
 
     /**
@@ -126,10 +145,11 @@ public class HoawApplication extends Application {
     private UserConfiguration loadUserConfiguration() {
         final Gson gson = new Gson();
         try {
-            final String serialized = Files.readString(FileSystemService.getUserConfigurationPath(), StandardCharsets.UTF_8);
+            final String serialized = Files.readString(FileSystemService.getUserConfigurationPath(),
+                                                       StandardCharsets.UTF_8);
             return gson.fromJson(serialized, UserConfiguration.class);
         } catch (final IOException exception) {
-            return new UserConfiguration();
+            return new UserConfiguration(null, null);
         }
     }
 
@@ -144,5 +164,48 @@ public class HoawApplication extends Application {
             serialized,
             StandardOpenOption.TRUNCATE_EXISTING
         );
+    }
+
+    private void refreshWallpaper() {
+        this.runtimeConfiguration = this.loadRuntimeConfiguration();
+
+        final CurrentEnvironment currentEnv = new CurrentEnvironment(
+            Instant.now(),
+            RegistryManager.isLightThemeEnabled(),
+            null,
+            null
+        );
+        for (final RuntimeConfiguration.Monitor monitor : this.runtimeConfiguration.monitors()) {
+            final String wallpaperFilename = this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
+            if (wallpaperFilename == null) {
+                // The user has not set a wallpaper for that screen
+                continue;
+            }
+
+            // Find the definition of the given wallpaper
+            final var wallpaper = new AppearanceDynamicWallpaper(0, 0, 0);
+
+            final int requestedFrame = wallpaper.currentFrame(currentEnv);
+        }
+    }
+
+    private Map<String, DynamicWallpaperInterface> loadWallpapersFromFolder() {
+        final List<File> heicFiles;
+        try {
+            heicFiles =
+                FileSystemService.findHeicFilesInPath(Path.of(this.userConfiguration.getWallpaperFolderPath()));
+        } catch (final Exception exception) {
+            return Collections.emptyMap();
+        }
+
+        final Map<String, DynamicWallpaperInterface> wallpapers = new HashMap<>(heicFiles.size());
+        for (final File heicFile : heicFiles) {
+            try {
+                wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinition(heicFile));
+            } catch (final Exception exception) {
+
+            }
+        }
+        return wallpapers;
     }
 }

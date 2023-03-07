@@ -12,24 +12,27 @@ public enum CustomTag implements Tag {
     /**
      * The key "apple_desktop:solar", the content is a string of base64-encoded binary content.
      */
-    XMP_SOLAR("solar", Type.STRING),
+    XMP_SOLAR("Solar"),
 
     /**
      * The key "apple_desktop:h24", the content is a string of base64-encoded binary content.
      */
-    XMP_H24("h24", Type.STRING),
+    XMP_H24("H24"),
 
     /**
      * The key "apple_desktop:apr", the content is a string of base64-encoded binary content.
      */
-    XMP_APR("apr", Type.STRING);
+    XMP_APR("Apr"),
+
+    /**
+     * The QuickTime "Metadata Image Size".
+     */
+    QUICKTIME_METAIMAGESIZE("MetaImageSize");
 
     private final String name;
-    private final Type type;
 
-    CustomTag(String name, Type type) {
+    CustomTag(final String name) {
         this.name = name;
-        this.type = type;
     }
 
     public String getName() {
@@ -40,19 +43,8 @@ public enum CustomTag implements Tag {
         return this.name;
     }
 
-    public <T> T parse(String value) {
-        return this.type.parse(value);
-    }
-
-    private enum Type {
-        STRING {
-            @Override
-            public <T> T parse(String value) {
-                return (T) value;
-            }
-        };
-
-        public abstract <T> T parse(String var1);
+    public String parse(final String value) {
+        return value;
     }
 }
 
