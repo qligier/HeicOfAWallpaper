@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper;
+package ch.qligier.heicofawallpaper.service;
 
 import ch.qligier.heicofawallpaper.win32.Shell32Manager;
 

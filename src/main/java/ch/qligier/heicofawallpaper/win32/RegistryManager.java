@@ -1,5 +1,6 @@
 package ch.qligier.heicofawallpaper.win32;
 
+import ch.qligier.heicofawallpaper.Utils;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 
@@ -32,21 +33,24 @@ public class RegistryManager {
         var bytes = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet" +
             "\\Enum\\DISPLAY" +
             "\\DEL422F\\1&8713bca&0&UID0\\Device Parameters", "EDID");
-        System.out.println(EdidUtil.toString(bytes));
+        //System.out.println(EdidUtil.toString(bytes));
+        System.out.println(Utils.parseMonitorNameFromEdid(bytes));
 
         System.out.println("-------");
 
         bytes = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet" +
             "\\Enum\\DISPLAY" +
             "\\DEL422F\\5&2ff1101f&4&UID4353\\Device Parameters", "EDID");
-        System.out.println(EdidUtil.toString(bytes));
+        //System.out.println(EdidUtil.toString(bytes));
+        System.out.println(Utils.parseMonitorNameFromEdid(bytes));
 
         System.out.println("-------");
 
         bytes = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet" +
             "\\Enum\\DISPLAY" +
             "\\DEL422F\\5&2ff1101f&4&UID4356\\Device Parameters", "EDID");
-        System.out.println(EdidUtil.toString(bytes));
+        //System.out.println(EdidUtil.toString(bytes));
+        System.out.println(Utils.parseMonitorNameFromEdid(bytes));
 
         System.out.println("-------");
     }

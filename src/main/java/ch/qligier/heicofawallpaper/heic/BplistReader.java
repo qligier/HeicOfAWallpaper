@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.xmp;
+package ch.qligier.heicofawallpaper.heic;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
 import ch.qligier.heicofawallpaper.model.*;
@@ -55,14 +55,14 @@ public class BplistReader {
             this.checkFrameIndex(numberOfFrames, frameIndex);
 
             parsedPhases.add(new TimeDynamicWallpaperPhase(frameIndex,
-                                                           this.parseTimePercent(this.getDoubleValue(phase, TIME))));
+                this.parseTimePercent(this.getDoubleValue(phase, TIME))));
         }
 
         return new TimeDynamicWallpaper(numberOfFrames, parsedPhases);
     }
 
-    public SolarDynamicWallpaper parseSolarMetadata(final String base64SolarBplist,
-                                                    final int numberOfFrames)
+    public SolarDynamicWallpaper parseSolarBplist(final String base64SolarBplist,
+                                                  final int numberOfFrames)
         throws PropertyListFormatException, IOException, ParseException, ParserConfigurationException, SAXException, InvalidDynamicWallpaperException {
         final HashMap<String, Object> root = this.parseBase64Bplist(base64SolarBplist);
 
@@ -114,7 +114,7 @@ public class BplistReader {
                 result.add(hashMap);
             } else {
                 throw new InvalidDynamicWallpaperException(String.format("The key '%s' is not an array of dictionary",
-                                                                         key));
+                    key));
             }
         }
         return result;
@@ -160,7 +160,7 @@ public class BplistReader {
                                  final int frameIndex) throws InvalidDynamicWallpaperException {
         if (frameIndex >= numberOfFrames) {
             throw new InvalidDynamicWallpaperException(String.format("The frame index '%d' is invalid, %d frames " +
-                                                                         "found", frameIndex, numberOfFrames));
+                "found", frameIndex, numberOfFrames));
         }
     }
 }

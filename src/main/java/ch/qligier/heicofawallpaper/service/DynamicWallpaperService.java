@@ -1,11 +1,10 @@
-package ch.qligier.heicofawallpaper.heic;
+package ch.qligier.heicofawallpaper.service;
 
-import ch.qligier.heicofawallpaper.FileSystemService;
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
+import ch.qligier.heicofawallpaper.heic.BplistReader;
+import ch.qligier.heicofawallpaper.heic.CustomTag;
+import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
-import ch.qligier.heicofawallpaper.xmp.BplistReader;
-import ch.qligier.heicofawallpaper.xmp.CustomTag;
-import ch.qligier.heicofawallpaper.xmp.XmpExtractor;
 import com.dd.plist.PropertyListFormatException;
 import com.thebuzzmedia.exiftool.Tag;
 import org.xml.sax.SAXException;
@@ -16,15 +15,20 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Quentin Ligier
  */
 public class DynamicWallpaperService {
 
-    private final XmpExtractor xmpExtractor = new XmpExtractor();
+    private final MetadataExtractor metadataExtractor;
 
     private final BplistReader bplistReader = new BplistReader();
+
+    public DynamicWallpaperService(final MetadataExtractor metadataExtractor) {
+        this.metadataExtractor = Objects.requireNonNull(metadataExtractor);
+    }
 
     public void uncompress(final File dynamicWallpaperFile) {
         final String hash = FileSystemService.sha256File(dynamicWallpaperFile);
@@ -35,14 +39,14 @@ public class DynamicWallpaperService {
     public DynamicWallpaperInterface loadDefinition(final File dynamicWallpaperFile)
         throws IOException, PropertyListFormatException, InvalidDynamicWallpaperException, ParseException, ParserConfigurationException, SAXException {
         System.out.println(Instant.now().toEpochMilli() + ": start metadata");
-        final Map<Tag, String> metadata = this.xmpExtractor.getMetadata(dynamicWallpaperFile);
+        final Map<Tag, String> metadata = this.metadataExtractor.getMetadata(dynamicWallpaperFile);
         System.out.println(Instant.now().toEpochMilli() + ": end metadata");
 
         final int numberOfFrames = this.getNumberOfFrames(metadata);
 
         System.out.println(Instant.now().toEpochMilli() + ": start parsing");
         if (metadata.containsKey(CustomTag.XMP_SOLAR)) {
-            return this.bplistReader.parseSolarMetadata(metadata.get(CustomTag.XMP_SOLAR), numberOfFrames);
+            return this.bplistReader.parseSolarBplist(metadata.get(CustomTag.XMP_SOLAR), numberOfFrames);
         } else if (metadata.containsKey(CustomTag.XMP_H24)) {
             return this.bplistReader.parseTimeBplist(metadata.get(CustomTag.XMP_H24), numberOfFrames);
         } else if (metadata.containsKey(CustomTag.XMP_APR)) {

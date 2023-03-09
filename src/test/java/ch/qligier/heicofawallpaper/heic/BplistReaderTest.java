@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.xmp;
+package ch.qligier.heicofawallpaper.heic;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
 import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
@@ -58,7 +58,7 @@ class BplistReaderTest {
     @Test
     void parseSolarMetadata()
         throws PropertyListFormatException, InvalidDynamicWallpaperException, IOException, ParseException, ParserConfigurationException, SAXException {
-        final SolarDynamicWallpaper solar = this.reader.parseSolarMetadata(
+        final SolarDynamicWallpaper solar = this.reader.parseSolarBplist(
             "YnBsaXN0MDDSAQIDCFJhcFJzadIEBQYHUWxRZBAAEAGqCQ8SFhkdISMmKdMKCwwNDgZRYVF6UWkjAAAAAAAAAAAjQHDgAAAAAADTCgsMEBEHI8A5AAAAAAAAI0BRgAAAAAAA0woLDBMUFSPAIgAAAAAAACNAVAAAAAAAABAC0woLDA0XGCNAVoAAAAAAABAD0woLDBobHCNAJAAAAAAAACNAWQAAAAAAABAE0woLDB4fICNAOQAAAAAAACNAW4AAAAAAABAF0woLDB4iICNAb0AAAAAAANMKCwwaJCUjQHBAAAAAAAAQBtMKCwwTJygjQHGAAAAAAAAQB9MKCwwQKgcjQHIgAAAAAAAACAANABAAEwAYABoAHAAeACAAKwAyADQANgA4AEEASgBRAFoAYwBqAHMAfAB+AIUAjgCQAJcAoACpAKsAsgC7AMQAxgDNANYA3QDmAOgA7wD4APoBAQAAAAAAAAIBAAAAAAAAACsAAAAAAAAAAAAAAAAAAAEK",
             8);
 

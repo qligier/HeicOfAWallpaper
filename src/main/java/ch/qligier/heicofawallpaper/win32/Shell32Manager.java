@@ -1,10 +1,7 @@
 package ch.qligier.heicofawallpaper.win32;
 
 import com.sun.jna.platform.win32.COM.COMUtils;
-import com.sun.jna.platform.win32.KnownFolders;
-import com.sun.jna.platform.win32.Ole32;
-import com.sun.jna.platform.win32.Shell32;
-import com.sun.jna.platform.win32.WinNT;
+import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.PointerByReference;
 
 import java.nio.file.Path;
@@ -24,6 +21,24 @@ public class Shell32Manager {
 
     /**
      * Retrieves the path of the Local AppData folder.
+     *
+     * @return the path of the Local AppData folder of the current user.
+     */
+    public static Path getLocalAppDataPath() {
+        return Path.of(getKnownFolderPath(KnownFolders.FOLDERID_LocalAppData));
+    }
+
+    /**
+     * Retrieves the path of the Pictures folder.
+     *
+     * @return the path of the Pictures folder of the current user.
+     */
+    public static Path getUserPicturesPath() {
+        return Path.of(getKnownFolderPath(KnownFolders.FOLDERID_Pictures));
+    }
+
+    /**
+     * Retrieves the path of a known folder folder.
      * <p>
      * The function interface is:
      * <pre>
@@ -60,10 +75,10 @@ public class Shell32Manager {
      *
      * @return the path of the Local AppData folder for the current user.
      */
-    public static Path getLocalAppDataPath() {
+    private static String getKnownFolderPath(final Guid.GUID folderId) {
         final PointerByReference ppszPath = new PointerByReference();
         final WinNT.HRESULT result = Shell32.INSTANCE.SHGetKnownFolderPath(
-            KnownFolders.FOLDERID_LocalAppData,
+            folderId,
             0, // No flag
             null, // Current user
             ppszPath
@@ -74,6 +89,6 @@ public class Shell32Manager {
             Ole32.INSTANCE.CoTaskMemFree(ppszPath.getPointer());
             throw exception;
         }
-        return Path.of(ppszPath.getValue().getWideString(0));
+        return ppszPath.getValue().getWideString(0);
     }
 }

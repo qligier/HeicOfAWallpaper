@@ -4,12 +4,15 @@ import ch.qligier.heicofawallpaper.configuration.RuntimeConfiguration;
 import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
 import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
-import ch.qligier.heicofawallpaper.heic.DynamicWallpaperService;
+import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
 import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
+import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
+import ch.qligier.heicofawallpaper.service.FileSystemService;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
 import ch.qligier.heicofawallpaper.win32.RegistryManager;
+import ch.qligier.heicofawallpaper.win32.Shell32Manager;
 import com.google.gson.Gson;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -36,6 +39,16 @@ import java.util.*;
  * @author Quentin Ligier
  */
 public class HoawApplication extends Application {
+
+    /**
+     *
+     */
+    private final MetadataExtractor metadataExtractor = new MetadataExtractor();
+
+    /**
+     *
+     */
+    private final DynamicWallpaperService dynamicWallpaperService = new DynamicWallpaperService(this.metadataExtractor);
 
     /**
      * The tray icon manager. The field is assigned in {@link #start(Stage)}.
@@ -66,11 +79,6 @@ public class HoawApplication extends Application {
      */
     @MonotonicNonNull
     private DesktopWallpaperManager desktopWallpaperManager;
-
-    /**
-     *
-     */
-    private final DynamicWallpaperService dynamicWallpaperService = new DynamicWallpaperService();
 
     /**
      * Entry point for the CLI.
@@ -124,7 +132,6 @@ public class HoawApplication extends Application {
      * Loads and returns the runtime configuration.
      */
     private RuntimeConfiguration loadRuntimeConfiguration() {
-        final int numberOfConnectedMonitors = this.desktopWallpaperManager.getMonitorDevicePathCount();
         final GraphicsDevice[] monitors = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
         final List<RuntimeConfiguration.Monitor> monitorDetails = new ArrayList<>(monitors.length);
         for (final GraphicsDevice monitor : monitors) {
@@ -146,10 +153,11 @@ public class HoawApplication extends Application {
         final Gson gson = new Gson();
         try {
             final String serialized = Files.readString(FileSystemService.getUserConfigurationPath(),
-                                                       StandardCharsets.UTF_8);
+                StandardCharsets.UTF_8);
             return gson.fromJson(serialized, UserConfiguration.class);
         } catch (final IOException exception) {
-            return new UserConfiguration(null, null);
+            return new UserConfiguration(Shell32Manager.getUserPicturesPath().toString(),
+                new HashMap<>());
         }
     }
 
@@ -199,12 +207,18 @@ public class HoawApplication extends Application {
         }
 
         final Map<String, DynamicWallpaperInterface> wallpapers = new HashMap<>(heicFiles.size());
+        this.metadataExtractor.start();
         for (final File heicFile : heicFiles) {
             try {
                 wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinition(heicFile));
             } catch (final Exception exception) {
 
             }
+        }
+        try {
+            this.metadataExtractor.close();
+        } catch (final Exception exception) {
+            // Let's ignore it for now
         }
         return wallpapers;
     }
