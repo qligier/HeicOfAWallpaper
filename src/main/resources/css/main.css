@@ -1,0 +1,18 @@
+#contentPane {
+    -fx-background-color: #f9f9f9;
+}
+
+#sidebar {
+    -fx-background-color: #eee;
+}
+
+.navItem {
+    -fx-cursor: Hand;
+    -fx-border-color: red;
+    -fx-border-width: 1px;
+}
+
+.navItem.active {
+    -fx-cursor: Pointer;
+    -fx-background-color: blue;
+}

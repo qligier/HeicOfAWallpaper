@@ -51,7 +51,7 @@ public class User32Manager {
      * href="https://github.com/java-native-access/jna/blob/master/contrib/monitordemo/src/com/sun/jna/contrib/demo/MonitorInfoDemo.java">MonitorInfoDemo</a>
      */
     public static void listMonitors() {
-        User32.INSTANCE.EnumDisplayMonitors(null, null, new WinUser.MONITORENUMPROC() {
+        final var result = User32.INSTANCE.EnumDisplayMonitors(null, null, new WinUser.MONITORENUMPROC() {
             @Override
             public int apply(final WinUser.HMONITOR hmonitor,
                              final WinDef.@Nullable HDC hdc,
@@ -78,6 +78,11 @@ public class User32Manager {
 
                 System.out.println("HMONITOR is linked to " + monitorCount + " physical monitors");
 
+                var min = new WinDef.DWORDByReference();
+                var current = new WinDef.DWORDByReference();
+                var max = new WinDef.DWORDByReference();
+                Dxva2.INSTANCE.GetMonitorBrightness(hmonitor, min, current, max);
+
                 PhysicalMonitorEnumerationAPI.PHYSICAL_MONITOR[] physMons = new PhysicalMonitorEnumerationAPI.PHYSICAL_MONITOR[monitorCount];
                 if (!Dxva2.INSTANCE.GetPhysicalMonitorsFromHMONITOR(hmonitor, monitorCount, physMons).booleanValue()) {
                     System.out.println("GetPhysicalMonitorsFromHMONITOR failed:");
@@ -93,6 +98,10 @@ public class User32Manager {
                 return 1;
             }
         }, new WinDef.LPARAM(1));
+
+        if (!result.booleanValue()) {
+            System.out.println("EnumDisplayMonitors failed");
+        }
     }
 
 }

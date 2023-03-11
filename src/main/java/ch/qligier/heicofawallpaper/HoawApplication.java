@@ -3,6 +3,7 @@ package ch.qligier.heicofawallpaper;
 import ch.qligier.heicofawallpaper.configuration.RuntimeConfiguration;
 import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
 import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
+import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
@@ -12,10 +13,8 @@ import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
 import ch.qligier.heicofawallpaper.win32.RegistryManager;
-import ch.qligier.heicofawallpaper.win32.Shell32Manager;
 import com.google.gson.Gson;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -51,12 +50,6 @@ public class HoawApplication extends Application {
     private final DynamicWallpaperService dynamicWallpaperService = new DynamicWallpaperService(this.metadataExtractor);
 
     /**
-     * The tray icon manager. The field is assigned in {@link #start(Stage)}.
-     */
-    @MonotonicNonNull
-    private TrayIconManager trayIcon;
-
-    /**
      * The main JavaFX stage. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
@@ -80,6 +73,9 @@ public class HoawApplication extends Application {
     @MonotonicNonNull
     private DesktopWallpaperManager desktopWallpaperManager;
 
+    @MonotonicNonNull
+    private Map<String, DynamicWallpaperInterface> wallpapersInFolder;
+
     /**
      * Entry point for the CLI.
      *
@@ -96,36 +92,37 @@ public class HoawApplication extends Application {
      *
      * @param stage the primary stage for this application, onto which the application scene can be set. Applications
      *              may create other stages, if needed, but they will not be primary stages.
-     * @throws IOException
      */
     @Override
-    public void start(final Stage stage) throws IOException {
-        this.trayIcon = new TrayIconManager(stage, this);
+    public void start(final Stage stage) {
+        System.out.println("start");
         this.mainStage = stage;
+        new TrayIconManager(this.mainStage, this);
 
         this.desktopWallpaperManager = DesktopWallpaperManager.create();
-
         this.runtimeConfiguration = this.loadRuntimeConfiguration();
-
         FileSystemService.ensureDataPathExists();
         this.userConfiguration = this.loadUserConfiguration();
+        this.wallpapersInFolder = this.loadWallpapersFromFolder();
+
+        this.showWindow();
     }
 
-    public void openSettingWindow() {
+    public void hideWindow() {
     }
 
-    public void openAboutWindow() throws IOException {
+    public void showWindow() {
+        System.out.println("showWindow");
         final Stage newWindow = new Stage();
-        final FXMLLoader fxmlLoader = new FXMLLoader(HoawApplication.class.getResource("/view/about.fxml"));
-        final Scene scene = new Scene(fxmlLoader.load(), 450, 600);
-        newWindow.setTitle("About " + StaticConfiguration.APP_NAME + " v" + StaticConfiguration.APP_VERSION);
-        newWindow.setScene(scene);
-        newWindow.initStyle(StageStyle.UTILITY);
-        newWindow.initModality(Modality.WINDOW_MODAL);
+        newWindow.setTitle(StaticConfiguration.APP_NAME + " v" + StaticConfiguration.APP_VERSION);
+        newWindow.setScene(new Scene(new MainWindow(this), 600, 600));
+        newWindow.initStyle(StageStyle.DECORATED);
+        newWindow.initModality(Modality.NONE);
         newWindow.initOwner(this.mainStage);
         newWindow.setResizable(false);
         newWindow.getIcons().add(Utils.getLogo());
         newWindow.show();
+
     }
 
     /**
@@ -153,11 +150,12 @@ public class HoawApplication extends Application {
         final Gson gson = new Gson();
         try {
             final String serialized = Files.readString(FileSystemService.getUserConfigurationPath(),
-                StandardCharsets.UTF_8);
+                                                       StandardCharsets.UTF_8);
             return gson.fromJson(serialized, UserConfiguration.class);
         } catch (final IOException exception) {
-            return new UserConfiguration(Shell32Manager.getUserPicturesPath().toString(),
-                new HashMap<>());
+            return new UserConfiguration("D:\\Programmation\\Java\\HeicOfAWallpaper\\src\\main\\resources\\heic",
+                                         //Shell32Manager.getUserPicturesPath().toString(),
+                                         new HashMap<>());
         }
     }
 
@@ -208,18 +206,52 @@ public class HoawApplication extends Application {
 
         final Map<String, DynamicWallpaperInterface> wallpapers = new HashMap<>(heicFiles.size());
         this.metadataExtractor.start();
-        for (final File heicFile : heicFiles) {
-            try {
-                wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinition(heicFile));
-            } catch (final Exception exception) {
+        heicFiles.parallelStream()
+            .forEach(heicFile -> {
+                try {
+                    wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinition(heicFile));
+                } catch (final Exception exception) {
 
-            }
-        }
+                }
+            });
         try {
             this.metadataExtractor.close();
         } catch (final Exception exception) {
             // Let's ignore it for now
         }
         return wallpapers;
+    }
+
+    public MetadataExtractor getMetadataExtractor() {
+        return this.metadataExtractor;
+    }
+
+    public DynamicWallpaperService getDynamicWallpaperService() {
+        return this.dynamicWallpaperService;
+    }
+
+    public Stage getMainStage() {
+        return this.mainStage;
+    }
+
+    public RuntimeConfiguration getRuntimeConfiguration() {
+        return this.runtimeConfiguration;
+    }
+
+    public UserConfiguration getUserConfiguration() {
+        return this.userConfiguration;
+    }
+
+    public DesktopWallpaperManager getDesktopWallpaperManager() {
+        return this.desktopWallpaperManager;
+    }
+
+    public Map<String, DynamicWallpaperInterface> getWallpapersInFolder() {
+        return this.wallpapersInFolder;
+    }
+
+    public void setWallpaperFolderPath(final String wallpaperFolderPath) {
+        this.userConfiguration.setWallpaperFolderPath(wallpaperFolderPath);
+        this.wallpapersInFolder = this.loadWallpapersFromFolder();
     }
 }

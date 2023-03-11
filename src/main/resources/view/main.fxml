@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<fx:root xmlns:fx="http://javafx.com/fxml/1" prefHeight="600.0" prefWidth="600.0" stylesheets="@../css/main.css"
+         xmlns="http://javafx.com/javafx/18" type="javafx.scene.layout.AnchorPane">
+    <BorderPane id="contentPane" fx:id="contentPane" prefHeight="600.0" prefWidth="600.0">
+        <left>
+            <VBox id="sidebar" fx:id="sidebar" prefHeight="600.0" prefWidth="84.0" BorderPane.alignment="CENTER">
+                <HBox id="navWallpapers" fx:id="navWallpapers" onMouseClicked="#openPageWallpapers"
+                      prefHeight="84.0" prefWidth="84.0" styleClass="navItem">
+                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Wallpapers" textAlignment="CENTER"
+                          wrappingWidth="84.0"/>
+                </HBox>
+                <HBox id="navScreens" fx:id="navScreens" layoutX="10.0" layoutY="10.0"
+                      onMouseClicked="#openPageScreens" prefHeight="84.0" prefWidth="84.0" styleClass="navItem">
+                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Screens" textAlignment="CENTER"
+                          wrappingWidth="84.0"/>
+                </HBox>
+                <HBox id="navConfiguration" fx:id="navConfiguration" layoutX="10.0" layoutY="94.0"
+                      onMouseClicked="#openPageConfiguration" prefHeight="84.0" prefWidth="84.0"
+                      styleClass="navItem">
+                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Configuration" textAlignment="CENTER"
+                          wrappingWidth="84.0"/>
+                </HBox>
+                <HBox id="navAbout" fx:id="navAbout" layoutX="10.0" layoutY="178.0"
+                      onMouseClicked="#openPageAbout" prefHeight="84.0" prefWidth="84.0" styleClass="navItem">
+                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="About" textAlignment="CENTER"
+                          wrappingWidth="84.0"/>
+                </HBox>
+            </VBox>
+        </left>
+    </BorderPane>
+</fx:root>

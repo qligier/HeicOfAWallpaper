@@ -51,7 +51,7 @@ public class Utils {
      */
     public static Image getLogo() {
         return new Image(Objects.requireNonNull(
-            Utils.class.getResourceAsStream("/images/logo_color_128.png")));
+            Utils.class.getResourceAsStream("/icon/logo_color_128.png")));
     }
 
     /**
@@ -104,12 +104,12 @@ public class Utils {
      * Descriptors</a>
      */
     public static String parseMonitorNameFromEdid(final byte[] edid) {
-        for (int i = 0; i < 18; ++i) {
+        for (int i = 0; i < 4; ++i) {
             final int type = ByteBuffer.wrap(Arrays.copyOfRange(edid, 54 + 18 * i, 58 + 18 * i)).getInt();
 
-            if (type == 0xfb) {
+            if (type == 252) {
                 return new String(Arrays.copyOfRange(edid, 58 + 18 * i, 72 + 18 * i),
-                    StandardCharsets.US_ASCII).trim();
+                                  StandardCharsets.US_ASCII).trim();
             }
         }
         return "NO_NAME";

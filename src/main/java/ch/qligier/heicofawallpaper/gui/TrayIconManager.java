@@ -28,8 +28,8 @@ public class TrayIconManager {
                            final HoawApplication app) {
         Objects.requireNonNull(stage, "stage shall not be null in TrayIcon()");
         Objects.requireNonNull(app, "app shall not be null in TrayIcon()");
-        this.icon = new FXTrayIcon.Builder(stage, TrayIconManager.class.getResource("/icon/tray.png"))
-            .menuItem("Settings…", e -> app.openSettingWindow())
+        this.icon = new FXTrayIcon.Builder(stage, TrayIconManager.class.getResource("/icon/logo_color_128.png"))
+            .menuItem("Settings…", e -> app.showWindow())
             .addExitMenuItem()
             .show()
             .build();

@@ -22,11 +22,11 @@ public class MetadataExtractor {
      * The list of useful tags to extract.
      */
     private static final List<Tag> TAGS_OF_INTEREST = List.of(CustomTag.XMP_SOLAR,
-        CustomTag.XMP_H24,
-        CustomTag.XMP_APR,
-        CustomTag.QUICKTIME_METAIMAGESIZE,
-        StandardTag.IMAGE_WIDTH,
-        StandardTag.IMAGE_HEIGHT
+                                                              CustomTag.XMP_H24,
+                                                              CustomTag.XMP_APR,
+                                                              CustomTag.QUICKTIME_METAIMAGESIZE,
+                                                              StandardTag.IMAGE_WIDTH,
+                                                              StandardTag.IMAGE_HEIGHT
     );
 
     /**
@@ -41,14 +41,14 @@ public class MetadataExtractor {
     public void start() {
         this.exifTool = new ExifToolBuilder()
             .enableStayOpen()
-            .withPoolSize(2)
+            .withPoolSize(8)
             .build();
     }
 
     /**
      * Clears a pool of ExifTool services.
      *
-     * @throws Exception if an error occurred while closing exiftool client.
+     * @throws Exception if an error occurred while closing exiftool clients.
      */
     public void close() throws Exception {
         if (this.exifTool == null) {
@@ -62,7 +62,7 @@ public class MetadataExtractor {
      *
      * @param imageFile The HEIF file.
      * @return a map of tag name and value.
-     * @throws IOException if something bad happen during I/O operations.
+     * @throws IOException if something bad happens during I/O operations.
      */
     public Map<Tag, String> getMetadata(final File imageFile) throws IOException {
         if (this.exifTool == null) {

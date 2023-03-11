@@ -25,4 +25,9 @@ public interface DynamicWallpaperInterface {
      * @return the index of the frame to show.
      */
     int currentFrame(final CurrentEnvironment currentEnvironment);
+
+    /**
+     * Returns the type of the dynamic wallpaper.
+     */
+    DynamicWallpaperType type();
 }

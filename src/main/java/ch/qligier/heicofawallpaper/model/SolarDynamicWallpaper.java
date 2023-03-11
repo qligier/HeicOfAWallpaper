@@ -59,6 +59,14 @@ public record SolarDynamicWallpaper(int numberOfFrames,
         return 0;
     }
 
+    /**
+     * Returns the type of the dynamic wallpaper.
+     */
+    @Override
+    public DynamicWallpaperType type() {
+        return DynamicWallpaperType.SOLAR;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;

@@ -71,6 +71,14 @@ public record TimeDynamicWallpaper(int numberOfFrames,
         return this.phases.get(this.phases.size() - 1).frameIndex();
     }
 
+    /**
+     * Returns the type of the dynamic wallpaper.
+     */
+    @Override
+    public DynamicWallpaperType type() {
+        return DynamicWallpaperType.TIME;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;

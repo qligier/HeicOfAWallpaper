@@ -37,6 +37,14 @@ public record AppearanceDynamicWallpaper(int numberOfFrames,
         return currentEnvironment.isLightThemeEnabled() ? this.lightFrameIndex : this.darkFrameIndex;
     }
 
+    /**
+     * Returns the type of the dynamic wallpaper.
+     */
+    @Override
+    public DynamicWallpaperType type() {
+        return DynamicWallpaperType.APPEARANCE;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
