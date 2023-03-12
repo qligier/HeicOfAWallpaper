@@ -7,15 +7,17 @@ import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
 import com.dd.plist.PropertyListFormatException;
 import com.thebuzzmedia.exiftool.Tag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
-import java.time.Instant;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * @author Quentin Ligier
@@ -30,21 +32,44 @@ public class DynamicWallpaperService {
         this.metadataExtractor = Objects.requireNonNull(metadataExtractor);
     }
 
-    public void uncompress(final File dynamicWallpaperFile) {
-        final String hash = FileSystemService.sha256File(dynamicWallpaperFile);
+    public void extract(final File dynamicWallpaperFile,
+                        @Nullable String hash) throws IOException, InterruptedException {
+        System.out.println("extract");
+        if (hash == null) {
+            hash = FileSystemService.sha256File(dynamicWallpaperFile);
+        }
 
-        // imagemagick
+        final File destinationFolder = FileSystemService.getDataPath().resolve(hash).toFile();
+        destinationFolder.mkdirs();
+
+        final String[] commands = new String[6];
+        commands[0] = "magick";
+        commands[1] = "convert";
+        commands[2] = '"' + dynamicWallpaperFile.getAbsolutePath() + '"';
+        commands[3] = "-quality";
+        commands[4] = "85";
+        final String filenameHeic = dynamicWallpaperFile.getName();
+        final String filenameJpg = filenameHeic.substring(0, filenameHeic.length() - 5) + ".jpg";
+        commands[5] = '"' + destinationFolder.toPath().resolve(filenameJpg).toString() + '"';
+
+        System.out.println(Arrays.toString(commands));
+
+        final ProcessBuilder builder = new ProcessBuilder();
+        builder.command(commands);
+        final Process process = builder.start();
+        final StreamGobbler streamGobbler =
+            new StreamGobbler(process.getInputStream(), System.out::println);
+        Executors.newSingleThreadExecutor().submit(streamGobbler);
+        int exitCode = process.waitFor();
+        System.out.println("Process exit code: " + exitCode);
     }
 
     public DynamicWallpaperInterface loadDefinition(final File dynamicWallpaperFile)
         throws IOException, PropertyListFormatException, InvalidDynamicWallpaperException, ParseException, ParserConfigurationException, SAXException {
-        System.out.println(Instant.now().toEpochMilli() + ": start metadata");
         final Map<Tag, String> metadata = this.metadataExtractor.getMetadata(dynamicWallpaperFile);
-        System.out.println(Instant.now().toEpochMilli() + ": end metadata");
 
         final int numberOfFrames = this.getNumberOfFrames(metadata);
 
-        System.out.println(Instant.now().toEpochMilli() + ": start parsing");
         if (metadata.containsKey(CustomTag.XMP_SOLAR)) {
             return this.bplistReader.parseSolarBplist(metadata.get(CustomTag.XMP_SOLAR), numberOfFrames);
         } else if (metadata.containsKey(CustomTag.XMP_H24)) {
@@ -65,5 +90,15 @@ public class DynamicWallpaperService {
         }
 
         throw new InvalidDynamicWallpaperException("The MetaImageSize is missing");
+    }
+
+    private record StreamGobbler(InputStream inputStream, Consumer<String> consumer) implements Runnable {
+
+        @Override
+        public void run() {
+            new BufferedReader(new InputStreamReader(inputStream))
+                .lines()
+                .forEach(consumer);
+        }
     }
 }

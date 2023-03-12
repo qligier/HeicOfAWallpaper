@@ -3,10 +3,9 @@ package ch.qligier.heicofawallpaper.service;
 import ch.qligier.heicofawallpaper.win32.Shell32Manager;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -69,24 +68,22 @@ public class FileSystemService {
     }
 
     public static String sha256File(final File file) {
-        MessageDigest digest;
+        final MessageDigest digest;
+        final byte[] bytes;
         try {
             digest = MessageDigest.getInstance("SHA-256");
+            bytes = Files.readAllBytes(file.toPath());
         } catch (final NoSuchAlgorithmException exception) {
             LOG.severe("SHA-256 is not available");
             throw new RuntimeException(exception);
-        }
-
-        try (final DigestInputStream dis = new DigestInputStream(new FileInputStream(file), digest)) {
-            while (dis.read() != -1) {
-                // Read the file till the end
-            }
-            digest = dis.getMessageDigest();
         } catch (final IOException exception) {
+            LOG.severe("Can't read file");
             throw new RuntimeException(exception);
         }
+        final byte[] hash = digest.digest(bytes);
+
         final StringBuilder result = new StringBuilder();
-        for (final byte b : digest.digest()) {
+        for (final byte b : hash) {
             result.append(String.format("%02x", b));
         }
         return result.toString();

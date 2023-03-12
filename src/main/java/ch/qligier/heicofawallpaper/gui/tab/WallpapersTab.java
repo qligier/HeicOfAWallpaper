@@ -1,6 +1,8 @@
-package ch.qligier.heicofawallpaper.gui;
+package ch.qligier.heicofawallpaper.gui.tab;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
+import ch.qligier.heicofawallpaper.Utils;
+import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
 import ch.qligier.heicofawallpaper.model.SolarDynamicWallpaper;
@@ -24,11 +26,11 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * HeicOfAWallpaper
+ * The 'wallpapers' tab controller.
  *
  * @author Quentin Ligier
  **/
-public class WallpapersWindow extends AbstractContentWindow {
+public class WallpapersTab extends AbstractContentTab {
 
     @FXML
     @MonotonicNonNull
@@ -56,16 +58,17 @@ public class WallpapersWindow extends AbstractContentWindow {
 
     protected TypeFilter typeFilter = TypeFilter.ALL;
 
-    public WallpapersWindow(final HoawApplication app,
-                            final MainWindow window) {
+    public WallpapersTab(final HoawApplication app,
+                         final MainWindow window) {
         super(app, window);
         final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/wallpapers.fxml"));
         loader.setController(this);
         loader.setRoot(this);
         try {
             loader.load();
-        } catch (final Exception e) {
-            e.printStackTrace();
+        } catch (final Exception exception) {
+            Utils.showException(exception);
+            return;
         }
 
         this.typeChooser.getItems().addAll(TypeFilter.values());
@@ -148,7 +151,7 @@ public class WallpapersWindow extends AbstractContentWindow {
         protected void updateItem(final Map.@Nullable Entry<String, DynamicWallpaperInterface> entry,
                                   final boolean empty) {
             super.updateItem(entry, empty);
-            if (entry == null) {
+            if (empty || entry == null) {
                 setGraphic(null);
                 return;
             }
@@ -159,7 +162,7 @@ public class WallpapersWindow extends AbstractContentWindow {
                 case TIME -> "clock.png";
                 case SOLAR -> "sun.png";
             };
-            final InputStream is = WallpapersWindow.class.getResourceAsStream("/icon/" + iconName);
+            final InputStream is = WallpapersTab.class.getResourceAsStream("/icon/" + iconName);
             final ImageView imageView = new ImageView(new Image(Objects.requireNonNull(is)));
             imageView.setFitHeight(20);
             imageView.setFitWidth(20);

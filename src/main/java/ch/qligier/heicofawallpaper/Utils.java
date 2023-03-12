@@ -57,7 +57,7 @@ public class Utils {
     /**
      * Opens a dialog that shows details of the given exception.
      *
-     * @param exception The exception to show.
+     * @param exception The exception to display to the user.
      */
     public static void showException(final Throwable exception) {
         final var alert = new Alert(

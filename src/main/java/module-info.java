@@ -23,4 +23,5 @@ module ch.qligier.heicofawallpaper {
     exports ch.qligier.heicofawallpaper;
     exports ch.qligier.heicofawallpaper.heic;
     opens ch.qligier.heicofawallpaper.gui to javafx.fxml;
+    opens ch.qligier.heicofawallpaper.gui.tab to javafx.fxml;
 }

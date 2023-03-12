@@ -19,6 +19,7 @@ public record RuntimeConfiguration(boolean isLightThemeEnabled,
 
     public record Monitor(String devicePath,
                           String deviceName,
+                          int index,
                           int width,
                           int height) {
     }

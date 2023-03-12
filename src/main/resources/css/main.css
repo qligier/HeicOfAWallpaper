@@ -8,11 +8,11 @@
 
 .navItem {
     -fx-cursor: Hand;
-    -fx-border-color: red;
-    -fx-border-width: 1px;
+    -fx-border-color: #ddd;
+    -fx-border-width: 0 1px 0 0;
 }
 
 .navItem.active {
     -fx-cursor: Pointer;
-    -fx-background-color: blue;
+    -fx-background-color: #ddd;
 }

@@ -1,6 +1,7 @@
 package ch.qligier.heicofawallpaper.gui;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
+import ch.qligier.heicofawallpaper.gui.tab.*;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -101,16 +102,16 @@ public class MainWindow extends AnchorPane {
      * The enumeration of pages.
      */
     protected enum Page {
-        WALLPAPERS("navWallpapers", WallpapersWindow::new),
-        SCREENS("navScreens", WallpapersWindow::new),
-        CONFIGURATION("navConfiguration", WallpapersWindow::new),
-        ABOUT("navAbout", WallpapersWindow::new);
+        WALLPAPERS("navWallpapers", WallpapersTab::new),
+        SCREENS("navScreens", ScreensTab::new),
+        CONFIGURATION("navConfiguration", ConfigurationTab::new),
+        ABOUT("navAbout", AboutTab::new);
 
         private final String id;
-        private final BiFunction<HoawApplication, MainWindow, AbstractContentWindow> supplier;
+        private final BiFunction<HoawApplication, MainWindow, AbstractContentTab> supplier;
 
         Page(final String id,
-             final BiFunction<HoawApplication, MainWindow, AbstractContentWindow> supplier) {
+             final BiFunction<HoawApplication, MainWindow, AbstractContentTab> supplier) {
             this.id = id;
             this.supplier = supplier;
         }
@@ -119,7 +120,7 @@ public class MainWindow extends AnchorPane {
             return this.id;
         }
 
-        public BiFunction<HoawApplication, MainWindow, AbstractContentWindow> getSupplier() {
+        public BiFunction<HoawApplication, MainWindow, AbstractContentTab> getSupplier() {
             return this.supplier;
         }
     }

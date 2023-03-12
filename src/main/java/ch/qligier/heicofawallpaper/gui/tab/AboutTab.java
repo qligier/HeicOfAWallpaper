@@ -1,9 +1,12 @@
-package ch.qligier.heicofawallpaper.gui;
+package ch.qligier.heicofawallpaper.gui.tab;
 
+import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
+import ch.qligier.heicofawallpaper.gui.MainWindow;
 import com.sandec.mdfx.MarkdownView;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
@@ -18,11 +21,11 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 
 /**
- * The 'about' window controller.
+ * The 'about' tab controller.
  *
  * @author Quentin Ligier
  **/
-public class AboutWindow implements Initializable {
+public class AboutTab extends AbstractContentTab {
 
     /**
      * JavaFX markup.
@@ -45,16 +48,19 @@ public class AboutWindow implements Initializable {
     @FXML
     protected Hyperlink gitHubLink;
 
-    /**
-     * Called to initialize a controller after its root element has been completely processed.
-     *
-     * @param url            The location used to resolve relative paths for the root object, or {@code null} if the
-     *                       location is not known.
-     * @param resourceBundle The resources used to localize the root object, or {@code null} if the root object was not
-     *                       localized.
-     */
-    @Override
-    public void initialize(final URL url, final ResourceBundle resourceBundle) {
+    public AboutTab(final HoawApplication app,
+                    final MainWindow window) {
+        super(app, window);
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/about.fxml"));
+        loader.setController(this);
+        loader.setRoot(this);
+        try {
+            loader.load();
+        } catch (final Exception exception) {
+            Utils.showException(exception);
+            return;
+        }
+
         this.appNameLabel.setText(StaticConfiguration.APP_NAME);
         this.appVersionLabel.setText(StaticConfiguration.APP_VERSION);
 
@@ -88,7 +94,7 @@ public class AboutWindow implements Initializable {
      * @return the resource content or an empty string.
      */
     private String loadResource(final String path) {
-        try (final var is = AboutWindow.class.getResourceAsStream(path)) {
+        try (final var is = AboutTab.class.getResourceAsStream(path)) {
             if (is == null) {
                 return "";
             }
@@ -106,7 +112,7 @@ public class AboutWindow implements Initializable {
 
         public CustomMarkdownView(final String mdString) {
             super(mdString);
-            final var cssPath = Objects.requireNonNull(AboutWindow.class.getResource("mdfx.css")).toExternalForm();
+            final var cssPath = Objects.requireNonNull(AboutTab.class.getResource("mdfx.css")).toExternalForm();
             this.getStylesheets().clear();
             this.getStylesheets().add(cssPath);
             this.setPrefWidth(420);

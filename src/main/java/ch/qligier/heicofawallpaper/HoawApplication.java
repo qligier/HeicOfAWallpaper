@@ -6,7 +6,6 @@ import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
-import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
 import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
@@ -14,6 +13,10 @@ import ch.qligier.heicofawallpaper.service.FileSystemService;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
 import ch.qligier.heicofawallpaper.win32.RegistryManager;
 import com.google.gson.Gson;
+import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.COM.COMUtils;
+import com.sun.jna.platform.win32.Ole32;
+import com.sun.jna.platform.win32.WinNT;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -31,6 +34,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.List;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * The main Heic Of a Wallpaper application.
@@ -38,6 +42,9 @@ import java.util.*;
  * @author Quentin Ligier
  */
 public class HoawApplication extends Application {
+    private static final Logger LOG = Logger.getLogger("HoawApplication");
+
+    private static final long REFRESH_DELAY_MS = 1000 * 60;
 
     /**
      *
@@ -76,6 +83,9 @@ public class HoawApplication extends Application {
     @MonotonicNonNull
     private Map<String, DynamicWallpaperInterface> wallpapersInFolder;
 
+    @MonotonicNonNull
+    private Timer timer;
+
     /**
      * Entry point for the CLI.
      *
@@ -104,6 +114,15 @@ public class HoawApplication extends Application {
         FileSystemService.ensureDataPathExists();
         this.userConfiguration = this.loadUserConfiguration();
         this.wallpapersInFolder = this.loadWallpapersFromFolder();
+
+        this.timer = new Timer();
+        final Runnable refresh = this::refreshWallpaper;
+        this.timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                refresh.run();
+            }
+        }, 500, REFRESH_DELAY_MS);
 
         this.showWindow();
     }
@@ -136,6 +155,7 @@ public class HoawApplication extends Application {
             monitorDetails.add(new RuntimeConfiguration.Monitor(
                 monitor.getIDstring(),
                 "",
+                0, // TODO
                 displayMode.getWidth(),
                 displayMode.getHeight()
             ));
@@ -173,6 +193,7 @@ public class HoawApplication extends Application {
     }
 
     private void refreshWallpaper() {
+        System.out.println("refreshWallpaper");
         this.runtimeConfiguration = this.loadRuntimeConfiguration();
 
         final CurrentEnvironment currentEnv = new CurrentEnvironment(
@@ -189,9 +210,34 @@ public class HoawApplication extends Application {
             }
 
             // Find the definition of the given wallpaper
-            final var wallpaper = new AppearanceDynamicWallpaper(0, 0, 0);
+            final var wallpaper = this.wallpapersInFolder.get(wallpaperFilename);
+            if (wallpaper == null) {
+                // Can't find, must delete from choice
+                continue;
+            }
 
             final int requestedFrame = wallpaper.currentFrame(currentEnv);
+            final String frameFilename = String.format("%s-%d.jpg",
+                                                       wallpaperFilename.substring(0, wallpaperFilename.length() - 5),
+                                                       requestedFrame);
+            final File wallpaperFile = Path.of(this.userConfiguration.getWallpaperFolderPath())
+                .resolve(wallpaperFilename)
+                .toFile();
+            final String hash = FileSystemService.sha256File(wallpaperFile);
+            final Path framePath = FileSystemService.getDataPath()
+                .resolve(hash)
+                .resolve(frameFilename);
+            if (!framePath.toFile().exists()) {
+                return;
+            }
+
+            System.out.println("Setting wallpaper: " + framePath);
+            // Create an instance to bind the COM channel to the current thread
+            WinNT.HRESULT result = Ole32.INSTANCE.CoInitializeEx(Pointer.NULL,
+                                                                 Ole32.COINIT_MULTITHREADED);
+            COMUtils.checkRC(result);
+            final var manager = DesktopWallpaperManager.create();
+            manager.setJpgWallpaper(0, framePath);
         }
     }
 
@@ -220,6 +266,26 @@ public class HoawApplication extends Application {
             // Let's ignore it for now
         }
         return wallpapers;
+    }
+
+    private void ensureWallpaperIsExtracted(final String wallpaperFilename) {
+        System.out.println("ensureWallpaperIsExtracted");
+        final File dynamicWallpaperFile =
+            Path.of(this.userConfiguration.getWallpaperFolderPath()).resolve(wallpaperFilename).toFile();
+        if (!dynamicWallpaperFile.isFile() || !dynamicWallpaperFile.canRead()) {
+            LOG.info(() -> "The wallpaper at ' " + dynamicWallpaperFile.getAbsolutePath() + " ' is not readable");
+            return;
+        }
+        final String hash = FileSystemService.sha256File(dynamicWallpaperFile);
+        final File extractionFolder = FileSystemService.getDataPath().resolve(hash).toFile();
+        if (extractionFolder.exists()) {
+            return;
+        }
+        try {
+            this.dynamicWallpaperService.extract(dynamicWallpaperFile, hash);
+        } catch (final Exception exception) {
+            Utils.showException(exception);
+        }
     }
 
     public MetadataExtractor getMetadataExtractor() {
@@ -253,5 +319,16 @@ public class HoawApplication extends Application {
     public void setWallpaperFolderPath(final String wallpaperFolderPath) {
         this.userConfiguration.setWallpaperFolderPath(wallpaperFolderPath);
         this.wallpapersInFolder = this.loadWallpapersFromFolder();
+    }
+
+    public void setWallpaperChoice(final String monitorDevicePath,
+                                   final String wallpaperFilename) {
+        System.out.println("setWallpaperChoice");
+        if (!this.wallpapersInFolder.containsKey(wallpaperFilename)) {
+            LOG.info(() -> "The wallpaper filename '" + wallpaperFilename + "' is not present in the folder");
+            return;
+        }
+        this.ensureWallpaperIsExtracted(wallpaperFilename);
+        this.userConfiguration.getWallpaperChoices().put(monitorDevicePath, wallpaperFilename);
     }
 }
