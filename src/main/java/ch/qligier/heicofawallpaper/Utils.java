@@ -13,9 +13,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -90,28 +87,5 @@ public class Utils {
         if (result.isPresent() && result.get() == ButtonType.YES) {
             openBrowser("https://github.com/qligier/HeicOfAWallpaper/issues/new");
         }
-    }
-
-    /**
-     * Parses an EDID (Extended Display Identification Data) and extracts the monitor name from it.
-     *
-     * @param edid The EDID.
-     * @return the monitor name provided in the EDID.
-     * @implNote This implementation is based on <a
-     * href="https://github.com/oshi/oshi/blob/master/oshi-core/src/main/java/oshi/util/EdidUtil.java">OSHI</a>,
-     * released under the MIT License.
-     * @see <a href="https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Display_Descriptors">Display
-     * Descriptors</a>
-     */
-    public static String parseMonitorNameFromEdid(final byte[] edid) {
-        for (int i = 0; i < 4; ++i) {
-            final int type = ByteBuffer.wrap(Arrays.copyOfRange(edid, 54 + 18 * i, 58 + 18 * i)).getInt();
-
-            if (type == 252) {
-                return new String(Arrays.copyOfRange(edid, 58 + 18 * i, 72 + 18 * i),
-                                  StandardCharsets.US_ASCII).trim();
-            }
-        }
-        return "NO_NAME";
     }
 }

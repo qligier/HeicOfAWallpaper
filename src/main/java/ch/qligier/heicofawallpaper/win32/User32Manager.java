@@ -4,7 +4,7 @@ import com.sun.jna.platform.win32.*;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * The manager for User32.
+ * The Java manager around the native User32 methods.
  *
  * @author Quentin Ligier
  **/
@@ -90,7 +90,7 @@ public class User32Manager {
                 }
                 for (int i = 0; i < monitorCount; i++) {
                     WinNT.HANDLE hPhysicalMonitor = physMons[0].hPhysicalMonitor;
-                    System.out.println("Monitor " + i + " - " + new String(physMons[i].szPhysicalMonitorDescription));
+                    System.out.println("Monitor " + i + " - " + new String(physMons[i].szPhysicalMonitorDescription).strip());
                 }
 
                 // To continue the enumeration, return 1.

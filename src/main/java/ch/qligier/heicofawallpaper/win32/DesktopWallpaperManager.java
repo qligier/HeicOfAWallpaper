@@ -11,19 +11,16 @@ import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.PointerByReference;
 
-import java.awt.*;
 import java.nio.file.Path;
-import java.util.List;
 
 
 /**
- * The manager for DesktopWallpaper.
+ * The Java manager around native IDesktopWallpaper methods.
  *
  * @author Quentin Ligier
  * @see <a
  * href="https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-idesktopwallpaper">IDesktopWallpaper</a>
  * @see <a href="https://github.com/tpn/winsdk-10/blob/master/Include/10.0.14393.0/um/ShObjIdl.idl">ShObjIdl.idl</a>
- * <p>
  * <p>
  * https://github.com/matthiasblaesing/JNA-Demos
  * https://stackoverflow.com/questions/44016328/accessing-com-interface-with-jna
@@ -48,6 +45,12 @@ public class DesktopWallpaperManager extends Unknown {
     private static final int VTABLE_SETWALLPAPER = 3;
 
     /**
+     * The vtable for method GetWallpaper, as found in ShObjIdl.idl: IUnknown has 3 methods, SetWallpaper is the second
+     * method in IDesktopWallpaper, so it is at index 4.
+     */
+    private static final int VTABLE_GETWALLPAPER = 4;
+
+    /**
      * The vtable for method GetMonitorDevicePathAt, as found in ShObjIdl.idl: IUnknown has 3 methods,
      * GetMonitorDevicePathAt is the third method in IDesktopWallpaper, so it is at index 5.
      */
@@ -58,12 +61,22 @@ public class DesktopWallpaperManager extends Unknown {
      * GetMonitorDevicePathCount is the fourth method in IDesktopWallpaper, so it is at index 6.
      */
     private static final int VTABLE_GETMONITORDEVICEPATHCOUNT = 6;
-    private static final int VTABLE_ID_GET_MONITOR_DEVICE_PATH_AT = 5;
 
+    /**
+     * Private constructor. Use {@link #create()} to initiate the class.
+     *
+     * @param pvInstance The COM's pointer.
+     */
     private DesktopWallpaperManager(final Pointer pvInstance) {
         super(pvInstance);
     }
 
+    /**
+     * Initializes the class and the COM connexion.
+     *
+     * @return an initialized manager.
+     * @throws COMException if the COM initialization fails.
+     */
     public static DesktopWallpaperManager create() throws COMException {
         final PointerByReference p = new PointerByReference();
         final WinNT.HRESULT hr = Ole32.INSTANCE.CoCreateInstance(CLSID_DesktopWallpaper,
@@ -75,72 +88,100 @@ public class DesktopWallpaperManager extends Unknown {
         return new DesktopWallpaperManager(p.getValue());
     }
 
-    public List<GraphicsDevice> listScreens() {
-        return List.of(GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices());
-    }
-
+    /**
+     * Sets the wallpaper image for the given monitor.
+     *
+     * @param monitorIndex The monitor index.
+     * @param jpgWallpaper The path of the wallpaper to set.
+     * @throws COMException if a native method call fails.
+     */
     public void setJpgWallpaper(final int monitorIndex,
-                                final Path jpgWallpaper) {
+                                final Path jpgWallpaper) throws COMException {
 
         final WTypes.LPWSTR monitor = new WTypes.LPWSTR(this.getMonitorDevicePathAt(monitorIndex));
         final WTypes.LPWSTR wallpaper = new WTypes.LPWSTR(jpgWallpaper.toAbsolutePath().toString());
 
         // HRESULT SetWallpaper([in, unique] LPCWSTR monitorID, [in] LPCWSTR wallpaper);
-        int result = this._invokeNativeInt(VTABLE_SETWALLPAPER, new Object[]{this.getPointer(), monitor, wallpaper});
-        COMUtils.checkRC(new WinNT.HRESULT(result));
+        this.invokeNative(VTABLE_SETWALLPAPER, new Object[]{this.getPointer(), monitor, wallpaper});
 
         // Instead of using "C:\\1.jpg", use @"C:\1.jpg"?
     }
 
-    public String getMonitorDevicePathAt(final int monitorIndex) {
-        PointerByReference monitorId = new PointerByReference();
+    /**
+     * Gets the path of the current wallpaper image for the given monitor.
+     *
+     * @param monitorIndex The monitor index.
+     * @return The current wallpaper image path.
+     * @throws COMException if a native method call fails.
+     */
+    public String getJpgWallpaper(final int monitorIndex) throws COMException {
+        PointerByReference wallpaperPtr = new PointerByReference();
+        final WTypes.LPWSTR monitor = new WTypes.LPWSTR(this.getMonitorDevicePathAt(monitorIndex));
+        // HRESULT GetWallpaper([in, unique] LPCWSTR monitorID, [out, string] LPWSTR *wallpaper);
+        this.invokeNative(VTABLE_GETWALLPAPER, new Object[]{this.getPointer(), monitor, wallpaperPtr});
+        return this.extractLpwstr(wallpaperPtr);
+    }
+
+    /**
+     * Gets the monitor identifier (path) for the given monitor index.
+     *
+     * @param monitorIndex The monitor index (starting at 0).
+     * @return The monitor identifier (path).
+     * @throws COMException if a native method call fails.
+     */
+    public String getMonitorDevicePathAt(final int monitorIndex) throws COMException {
+        PointerByReference monitorIdPtr = new PointerByReference();
         // HRESULT GetMonitorDevicePathAt([in] UINT monitorIndex, [out, string] LPWSTR *monitorID);
-        int result = this._invokeNativeInt(VTABLE_GETMONITORDEVICEPATHAT, new Object[]{this.getPointer(),
-            monitorIndex, monitorId});
-        COMUtils.checkRC(new WinNT.HRESULT(result));
-        if (monitorId.getValue() != null) {
-            try {
-                return monitorId.getValue().getWideString(0);
-            } finally {
-                Ole32.INSTANCE.CoTaskMemFree(monitorId.getValue());
-            }
-        } else {
-            return null;
-        }
+        this.invokeNative(VTABLE_GETMONITORDEVICEPATHAT, new Object[]{this.getPointer(), monitorIndex, monitorIdPtr});
+        return this.extractLpwstr(monitorIdPtr);
     }
 
-    public String GetMonitorDevicePathAt(int monitorIdx) {
-        Pointer pResult = Ole32.INSTANCE.CoTaskMemAlloc(0);
-        PointerByReference pbr = new PointerByReference(pResult);
-        WinNT.HRESULT result = (WinNT.HRESULT) this._invokeNativeObject(VTABLE_ID_GET_MONITOR_DEVICE_PATH_AT,
-                                                                        new Object[]{this.getPointer(), monitorIdx, pbr},
-                                                                        WinNT.HRESULT.class);
-        COMUtils.checkRC(result);
-        if (pbr.getValue() != null) {
-            try {
-                return pbr.getValue().getWideString(0);
-            } finally {
-                Ole32.INSTANCE.CoTaskMemFree(pbr.getValue());
-            }
-        } else {
-            return null;
-        }
-    }
-
-    public void test(final Object monitorIndex,
-                     final Object monitorId) {
-        // HRESULT GetMonitorDevicePathAt([in] UINT monitorIndex, [out, string] LPWSTR *monitorID);
-        int result = this._invokeNativeInt(VTABLE_GETMONITORDEVICEPATHAT, new Object[]{this.getPointer(),
-            monitorIndex, monitorId});
-        System.out.println(result);
-        COMUtils.checkRC(new WinNT.HRESULT(result));
-    }
-
-    public int getMonitorDevicePathCount() {
+    /**
+     * Gets the number of monitors.
+     * <p>
+     * The count retrieved through this method includes monitors that are currently detached but that have an image
+     * assigned to them.
+     *
+     * @return the number of monitors.
+     * @throws COMException if a native method call fails.
+     */
+    public int getMonitorDevicePathCount() throws COMException {
         WinDef.UINTByReference count = new WinDef.UINTByReference();
         // HRESULT GetMonitorDevicePathCount([out] UINT *count);
-        int result = this._invokeNativeInt(VTABLE_GETMONITORDEVICEPATHCOUNT, new Object[]{this.getPointer(), count});
-        COMUtils.checkRC(new WinNT.HRESULT(result));
+        this.invokeNative(VTABLE_GETMONITORDEVICEPATHCOUNT, new Object[]{this.getPointer(), count});
         return count.getValue().intValue();
+    }
+
+    /**
+     * Invokes a IDesktopManager native method by its vtable ID and a list of parameters, and checks the result code.
+     * The first parameter shall be the COM's pointer.
+     *
+     * @param vtableId The method vtable ID.
+     * @param parameters The list of call parameters.
+     * @throws COMException if the method call failed (i.e. the result code was greater than 0).
+     */
+    protected void invokeNative(final int vtableId, final Object[] parameters) throws COMException {
+        final WinNT.HRESULT result = (WinNT.HRESULT) this._invokeNativeObject(vtableId,
+                                                                              parameters,
+                                                                              WinNT.HRESULT.class);
+        COMUtils.checkRC(result);
+    }
+
+    /**
+     * Extracts a Java String from a LPWSTR pointer and frees the value (it was not allocated by Java).
+     *
+     * @param pointer The LPWSTR pointer.
+     * @return a Java String or {@code null}.
+     * @throws COMException if the pointer has no value.
+     */
+    protected String extractLpwstr(final PointerByReference pointer) throws COMException {
+        if (pointer.getValue() != null) {
+            try {
+                return pointer.getValue().getWideString(0).strip();
+            } finally {
+                Ole32.INSTANCE.CoTaskMemFree(pointer.getValue());
+            }
+        }
+        throw new COMException("The LPWSTR pointer has no value");
     }
 }

@@ -7,7 +7,7 @@ import com.sun.jna.ptr.PointerByReference;
 import java.nio.file.Path;
 
 /**
- * The manager for Shell32.
+ * The Java manager for accessing Shell32 methods.
  *
  * @author Quentin Ligier
  **/

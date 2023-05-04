@@ -18,8 +18,4 @@ class UtilsTest {
         assertNotNull(logo);
         assertFalse(logo.isError());
     }
-
-    @Test
-    void parseMonitorNameFromEdid() {
-    }
 }

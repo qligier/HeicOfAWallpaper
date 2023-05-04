@@ -9,6 +9,7 @@ module ch.qligier.heicofawallpaper {
     requires com.dlsc.formsfx;
     requires com.sandec.mdfx;
     requires com.dustinredmond.fxtrayicon;
+    requires org.libheiffx;
 
     // JNA
     requires com.sun.jna;

@@ -14,7 +14,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>5.9.1</junit.version>
+        <maven.compiler.release>20</maven.compiler.release>
+
+        <junit.version>5.9.3</junit.version>
+        <javafx.version>20.0.1</javafx.version>
     </properties>
 
     <dependencies>
@@ -29,7 +32,7 @@
         <dependency>
             <groupId>com.googlecode.plist</groupId>
             <artifactId>dd-plist</artifactId>
-            <version>1.26</version>
+            <version>1.27</version>
         </dependency>
 
         <!-- An API to run exiftool -->
@@ -39,15 +42,16 @@
             <version>3.0.0</version>
         </dependency>
 
+        <!-- JavaFX dependencies -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>17.0.2</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>17.0.2</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.controlsfx</groupId>
@@ -57,7 +61,7 @@
         <dependency>
             <groupId>com.dlsc.formsfx</groupId>
             <artifactId>formsfx-core</artifactId>
-            <version>11.5.0</version>
+            <version>11.6.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.openjfx</groupId>
@@ -68,14 +72,21 @@
         <dependency>
             <groupId>com.sandec</groupId>
             <artifactId>mdfx</artifactId>
-            <version>0.2.8</version>
+            <version>0.2.12</version>
         </dependency>
         <dependency>
             <groupId>com.dustinredmond.fxtrayicon</groupId>
             <artifactId>FXTrayIcon</artifactId>
             <version>4.0.1</version>
         </dependency>
+        <!-- A Java wrapper of libheif for JavaFx -->
+        <dependency>
+            <groupId>org.libheiffx</groupId>
+            <artifactId>LibHeifFX</artifactId>
+            <version>1.2.3</version>
+        </dependency>
 
+        <!-- A JSON de/ser library -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -86,7 +97,7 @@
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId> <!-- MIT -->
-            <version>3.32.0</version>
+            <version>3.34.0</version>
         </dependency>
 
         <dependency>
@@ -109,10 +120,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.openjfx</groupId>
