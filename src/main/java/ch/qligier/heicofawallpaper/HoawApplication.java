@@ -150,12 +150,13 @@ public class HoawApplication extends Application {
     private RuntimeConfiguration loadRuntimeConfiguration() {
         final GraphicsDevice[] monitors = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
         final List<RuntimeConfiguration.Monitor> monitorDetails = new ArrayList<>(monitors.length);
+        int i = 0;
         for (final GraphicsDevice monitor : monitors) {
             final DisplayMode displayMode = monitor.getDisplayMode();
             monitorDetails.add(new RuntimeConfiguration.Monitor(
                 monitor.getIDstring(),
                 "",
-                0, // TODO
+                i++, // TODO
                 displayMode.getWidth(),
                 displayMode.getHeight()
             ));
@@ -202,42 +203,58 @@ public class HoawApplication extends Application {
             null,
             null
         );
-        for (final RuntimeConfiguration.Monitor monitor : this.runtimeConfiguration.monitors()) {
-            final String wallpaperFilename = this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
-            if (wallpaperFilename == null) {
-                // The user has not set a wallpaper for that screen
-                continue;
-            }
 
-            // Find the definition of the given wallpaper
-            final var wallpaper = this.wallpapersInFolder.get(wallpaperFilename);
-            if (wallpaper == null) {
-                // Can't find, must delete from choice
-                continue;
-            }
+        // Create an instance to bind the COM channel to the current thread
+        final WinNT.HRESULT result = Ole32.INSTANCE.CoInitializeEx(Pointer.NULL, Ole32.COINIT_MULTITHREADED);
+        COMUtils.checkRC(result);
+        DesktopWallpaperManager manager = null;
+        try {
+            manager = DesktopWallpaperManager.create();
+            for (final RuntimeConfiguration.Monitor monitor : this.runtimeConfiguration.monitors()) {
+                final String wallpaperFilename = this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
+                if (wallpaperFilename == null) {
+                    // The user has not set a wallpaper for that screen
+                    continue;
+                }
 
-            final int requestedFrame = wallpaper.currentFrame(currentEnv);
-            final String frameFilename = String.format("%s-%d.jpg",
-                                                       wallpaperFilename.substring(0, wallpaperFilename.length() - 5),
-                                                       requestedFrame);
-            final File wallpaperFile = Path.of(this.userConfiguration.getWallpaperFolderPath())
-                .resolve(wallpaperFilename)
-                .toFile();
-            final String hash = FileSystemService.sha256File(wallpaperFile);
-            final Path framePath = FileSystemService.getDataPath()
-                .resolve(hash)
-                .resolve(frameFilename);
-            if (!framePath.toFile().exists()) {
-                return;
-            }
+                // Find the definition of the given wallpaper
+                final var wallpaper = this.wallpapersInFolder.get(wallpaperFilename);
+                if (wallpaper == null) {
+                    // Can't find, must delete from choice
+                    continue;
+                }
 
-            System.out.println("Setting wallpaper: " + framePath);
-            // Create an instance to bind the COM channel to the current thread
-            WinNT.HRESULT result = Ole32.INSTANCE.CoInitializeEx(Pointer.NULL,
-                                                                 Ole32.COINIT_MULTITHREADED);
-            COMUtils.checkRC(result);
-            final var manager = DesktopWallpaperManager.create();
-            manager.setJpgWallpaper(0, framePath);
+                final int requestedFrame = wallpaper.currentFrame(currentEnv);
+                final String frameFilename = String.format("%s-%d.jpg",
+                                                           wallpaperFilename.substring(0,
+                                                                                       wallpaperFilename.length() - 5),
+                                                           requestedFrame);
+                final File wallpaperFile = Path.of(this.userConfiguration.getWallpaperFolderPath())
+                    .resolve(wallpaperFilename)
+                    .toFile();
+                final String hash = FileSystemService.sha256File(wallpaperFile);
+                final Path framePath = FileSystemService.getDataPath()
+                    .resolve(hash)
+                    .resolve(frameFilename);
+                if (!framePath.toFile().exists()) {
+                    LOG.warning("The frame path does not exist");
+                    continue;
+                }
+
+                final String monitorPath = manager.getMonitorDevicePathAt(monitor.index());
+                final Path currentWallpaper = Path.of(manager.getJpgWallpaper(monitorPath));
+                if (framePath.equals(currentWallpaper)) {
+                    LOG.finest("The requested frame is already used");
+                    continue;
+                }
+                System.out.println("Setting wallpaper: " + framePath);
+                manager.setJpgWallpaper(monitorPath, framePath);
+            }
+        } finally {
+            if (manager != null) {
+                manager.Release();
+            }
+            Ole32.INSTANCE.CoUninitialize();
         }
     }
 

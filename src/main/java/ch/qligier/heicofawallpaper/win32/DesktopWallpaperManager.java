@@ -13,7 +13,6 @@ import com.sun.jna.ptr.PointerByReference;
 
 import java.nio.file.Path;
 
-
 /**
  * The Java manager around native IDesktopWallpaper methods.
  *
@@ -91,14 +90,14 @@ public class DesktopWallpaperManager extends Unknown {
     /**
      * Sets the wallpaper image for the given monitor.
      *
-     * @param monitorIndex The monitor index.
+     * @param monitorPath  The monitor path.
      * @param jpgWallpaper The path of the wallpaper to set.
      * @throws COMException if a native method call fails.
      */
-    public void setJpgWallpaper(final int monitorIndex,
+    public void setJpgWallpaper(final String monitorPath,
                                 final Path jpgWallpaper) throws COMException {
 
-        final WTypes.LPWSTR monitor = new WTypes.LPWSTR(this.getMonitorDevicePathAt(monitorIndex));
+        final WTypes.LPWSTR monitor = new WTypes.LPWSTR(monitorPath);
         final WTypes.LPWSTR wallpaper = new WTypes.LPWSTR(jpgWallpaper.toAbsolutePath().toString());
 
         // HRESULT SetWallpaper([in, unique] LPCWSTR monitorID, [in] LPCWSTR wallpaper);
@@ -110,13 +109,13 @@ public class DesktopWallpaperManager extends Unknown {
     /**
      * Gets the path of the current wallpaper image for the given monitor.
      *
-     * @param monitorIndex The monitor index.
+     * @param monitorPath The monitor path.
      * @return The current wallpaper image path.
      * @throws COMException if a native method call fails.
      */
-    public String getJpgWallpaper(final int monitorIndex) throws COMException {
+    public String getJpgWallpaper(final String monitorPath) throws COMException {
         PointerByReference wallpaperPtr = new PointerByReference();
-        final WTypes.LPWSTR monitor = new WTypes.LPWSTR(this.getMonitorDevicePathAt(monitorIndex));
+        final WTypes.LPWSTR monitor = new WTypes.LPWSTR(monitorPath);
         // HRESULT GetWallpaper([in, unique] LPCWSTR monitorID, [out, string] LPWSTR *wallpaper);
         this.invokeNative(VTABLE_GETWALLPAPER, new Object[]{this.getPointer(), monitor, wallpaperPtr});
         return this.extractLpwstr(wallpaperPtr);
@@ -156,7 +155,7 @@ public class DesktopWallpaperManager extends Unknown {
      * Invokes a IDesktopManager native method by its vtable ID and a list of parameters, and checks the result code.
      * The first parameter shall be the COM's pointer.
      *
-     * @param vtableId The method vtable ID.
+     * @param vtableId   The method vtable ID.
      * @param parameters The list of call parameters.
      * @throws COMException if the method call failed (i.e. the result code was greater than 0).
      */

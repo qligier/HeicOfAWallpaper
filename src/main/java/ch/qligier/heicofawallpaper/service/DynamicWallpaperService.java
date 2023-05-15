@@ -68,7 +68,7 @@ public class DynamicWallpaperService {
         throws IOException, PropertyListFormatException, InvalidDynamicWallpaperException, ParseException, ParserConfigurationException, SAXException {
         final Map<Tag, String> metadata = this.metadataExtractor.getMetadata(dynamicWallpaperFile);
 
-        final int numberOfFrames = this.getNumberOfFrames(metadata);
+        final short numberOfFrames = this.getNumberOfFrames(metadata);
 
         if (metadata.containsKey(CustomTag.XMP_SOLAR)) {
             return this.bplistReader.parseSolarBplist(metadata.get(CustomTag.XMP_SOLAR), numberOfFrames);
@@ -80,13 +80,13 @@ public class DynamicWallpaperService {
         throw new InvalidDynamicWallpaperException("The dynamic wallpaper has no Solar, H24 or Apr metadata");
     }
 
-    private int getNumberOfFrames(final Map<Tag, String> metadata) throws InvalidDynamicWallpaperException {
+    private short getNumberOfFrames(final Map<Tag, String> metadata) throws InvalidDynamicWallpaperException {
         if (metadata.containsKey(CustomTag.QUICKTIME_METAIMAGESIZE)) {
             final String[] metaImageSizes = metadata.get(CustomTag.QUICKTIME_METAIMAGESIZE).split(" ");
             if (metaImageSizes.length % 4 != 0) {
                 throw new InvalidDynamicWallpaperException("The MetaImageSize has a number of values not divisible by 4");
             }
-            return metaImageSizes.length / 4 + 1; // TODO: Main image not here?
+            return (short) (metaImageSizes.length / 4 + 1); // TODO: Main image not here?
         }
 
         throw new InvalidDynamicWallpaperException("The MetaImageSize is missing");

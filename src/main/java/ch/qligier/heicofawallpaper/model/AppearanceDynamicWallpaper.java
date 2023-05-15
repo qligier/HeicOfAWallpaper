@@ -13,16 +13,16 @@ import java.util.Objects;
  * @param darkFrameIndex  The frame index of the dark theme.
  * @author Quentin Ligier
  */
-public record AppearanceDynamicWallpaper(int numberOfFrames,
-                                         int lightFrameIndex,
-                                         int darkFrameIndex) implements DynamicWallpaperInterface {
+public record AppearanceDynamicWallpaper(short numberOfFrames,
+                                         short lightFrameIndex,
+                                         short darkFrameIndex) implements DynamicWallpaperInterface {
 
     /**
      * Returns the number of phases in the dynamic wallpaper. A phase is a mapping of a frame to conditions to show the
      * frame. Multiple phases may use the same frame, and some frames may not be used by any phase.
      */
     @Override
-    public int numberOfPhases() {
+    public short numberOfPhases() {
         return 2;
     }
 
@@ -33,7 +33,7 @@ public record AppearanceDynamicWallpaper(int numberOfFrames,
      * @return the index of the frame to show.
      */
     @Override
-    public int currentFrame(final CurrentEnvironment currentEnvironment) {
+    public short currentFrame(final CurrentEnvironment currentEnvironment) {
         return currentEnvironment.isLightThemeEnabled() ? this.lightFrameIndex : this.darkFrameIndex;
     }
 
@@ -43,6 +43,38 @@ public record AppearanceDynamicWallpaper(int numberOfFrames,
     @Override
     public DynamicWallpaperType type() {
         return DynamicWallpaperType.APPEARANCE;
+    }
+
+    /**
+     * Returns the wallpaper height.
+     */
+    @Override
+    public short height() {
+        return 0;
+    }
+
+    /**
+     * Returns the wallpaper width.
+     */
+    @Override
+    public short width() {
+        return 0;
+    }
+
+    /**
+     * Returns the wallpaper file hash.
+     */
+    @Override
+    public String hash() {
+        return "";
+    }
+
+    /**
+     * Returns the wallpaper file name.
+     */
+    @Override
+    public String filename() {
+        return null;
     }
 
     @Override

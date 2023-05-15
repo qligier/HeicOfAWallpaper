@@ -22,7 +22,12 @@ module ch.qligier.heicofawallpaper {
     requires com.google.gson;
 
     exports ch.qligier.heicofawallpaper;
+    exports ch.qligier.heicofawallpaper.configuration;
+    exports ch.qligier.heicofawallpaper.exception;
     exports ch.qligier.heicofawallpaper.heic;
+    exports ch.qligier.heicofawallpaper.model;
+    exports ch.qligier.heicofawallpaper.service;
+    exports ch.qligier.heicofawallpaper.win32;
     opens ch.qligier.heicofawallpaper.gui to javafx.fxml;
     opens ch.qligier.heicofawallpaper.gui.tab to javafx.fxml;
 }

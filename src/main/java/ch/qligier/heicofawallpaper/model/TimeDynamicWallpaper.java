@@ -2,7 +2,6 @@ package ch.qligier.heicofawallpaper.model;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +15,7 @@ import java.util.Objects;
  * @param phases         The list of phases defined in the dynamic wallpaper.
  * @author Quentin Ligier
  **/
-public record TimeDynamicWallpaper(int numberOfFrames,
+public record TimeDynamicWallpaper(short numberOfFrames,
                                    List<TimeDynamicWallpaperPhase> phases) implements DynamicWallpaperInterface {
 
     /**
@@ -25,7 +24,7 @@ public record TimeDynamicWallpaper(int numberOfFrames,
      * @param numberOfFrames The number of frames in the dynamic wallpaper.
      * @param phases         The list of phases.
      */
-    public TimeDynamicWallpaper(final int numberOfFrames, final List<TimeDynamicWallpaperPhase> phases) {
+    public TimeDynamicWallpaper(final short numberOfFrames, final List<TimeDynamicWallpaperPhase> phases) {
         if (numberOfFrames < 1) {
             throw new RuntimeException("The time wallpaper has 0 frame, at least one expected");
         }
@@ -43,8 +42,8 @@ public record TimeDynamicWallpaper(int numberOfFrames,
      * frame. Multiple phases may use the same frame, and some frames may not be used by any phase.
      */
     @Override
-    public int numberOfPhases() {
-        return this.phases.size();
+    public short numberOfPhases() {
+        return (short) this.phases.size();
     }
 
     /**
@@ -54,11 +53,11 @@ public record TimeDynamicWallpaper(int numberOfFrames,
      * @return the index of the frame to show.
      */
     @Override
-    public int currentFrame(final CurrentEnvironment currentEnvironment) {
+    public short currentFrame(final CurrentEnvironment currentEnvironment) {
         final LocalTime currentTime = LocalTime.from(currentEnvironment.time().atZone(ZoneId.systemDefault()));
 
         // Try to find the earliest phase whose changing time is now or in the past
-        Integer currentFrame = this.phases.stream()
+        Short currentFrame = this.phases.stream()
             .filter(phase -> !phase.time().isAfter(currentTime))
             .findFirst()
             .map(TimeDynamicWallpaperPhase::frameIndex)
@@ -77,6 +76,38 @@ public record TimeDynamicWallpaper(int numberOfFrames,
     @Override
     public DynamicWallpaperType type() {
         return DynamicWallpaperType.TIME;
+    }
+
+    /**
+     * Returns the wallpaper height.
+     */
+    @Override
+    public short height() {
+        return 0;
+    }
+
+    /**
+     * Returns the wallpaper width.
+     */
+    @Override
+    public short width() {
+        return 0;
+    }
+
+    /**
+     * Returns the wallpaper file hash.
+     */
+    @Override
+    public String hash() {
+        return "";
+    }
+
+    /**
+     * Returns the wallpaper file name.
+     */
+    @Override
+    public String filename() {
+        return null;
     }
 
     @Override

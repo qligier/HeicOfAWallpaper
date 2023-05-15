@@ -45,6 +45,7 @@ public class ScreensTab extends AbstractContentTab {
     @FXML
     protected void onListRefresh() {
         final Set<String> heicFiles = this.app.getWallpapersInFolder().keySet();
+        final var choices = this.app.getUserConfiguration().getWallpaperChoices();
 
         this.screenList.getChildren().clear();
         for (final RuntimeConfiguration.Monitor monitor : this.app.getRuntimeConfiguration().monitors()) {
@@ -57,8 +58,8 @@ public class ScreensTab extends AbstractContentTab {
 
             final ChoiceBox<String> choiceBox = new ChoiceBox<>();
             choiceBox.getItems().add(NO_CHOICE);
-            choiceBox.setValue(NO_CHOICE);
             choiceBox.getItems().addAll(heicFiles);
+            choiceBox.setValue(choices.getOrDefault(monitor.devicePath(), NO_CHOICE));
             hBox.getChildren().add(choiceBox);
             choiceBox.setOnAction(event -> {
                 System.out.println("Got choiceBox event");

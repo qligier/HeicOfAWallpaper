@@ -2,6 +2,7 @@ package ch.qligier.heicofawallpaper.model;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 /**
  * The definition of a solar dynamic wallpaper.
@@ -16,7 +17,7 @@ import java.util.Objects;
  * @see <a href="https://github.com/mczachurski/wallpapper">This is simple console application for macOS to create
  * dynamic wallpapers introduced in macOS Mojave.</a>
  **/
-public record SolarDynamicWallpaper(int numberOfFrames,
+public record SolarDynamicWallpaper(short numberOfFrames,
                                     List<SolarDynamicWallpaperPhase> phases) implements DynamicWallpaperInterface {
 
     /**
@@ -25,7 +26,7 @@ public record SolarDynamicWallpaper(int numberOfFrames,
      * @param numberOfFrames The number of frames in the dynamic wallpaper.
      * @param phases         The list of phases defined in the dynamic wallpaper.
      */
-    public SolarDynamicWallpaper(int numberOfFrames,
+    public SolarDynamicWallpaper(short numberOfFrames,
                                  final List<SolarDynamicWallpaperPhase> phases) {
         if (numberOfFrames < 1) {
             throw new RuntimeException("The solar wallpaper has 0 frame, at least one expected");
@@ -44,8 +45,8 @@ public record SolarDynamicWallpaper(int numberOfFrames,
      * frame. Multiple phases may use the same frame, and some frames may not be used by any phase.
      */
     @Override
-    public int numberOfPhases() {
-        return this.phases.size();
+    public short numberOfPhases() {
+        return (short) this.phases.size();
     }
 
     /**
@@ -55,8 +56,8 @@ public record SolarDynamicWallpaper(int numberOfFrames,
      * @return the index of the frame to show.
      */
     @Override
-    public int currentFrame(final CurrentEnvironment currentEnvironment) {
-        return 0;
+    public short currentFrame(final CurrentEnvironment currentEnvironment) {
+        return (short) new Random().nextInt(0, this.numberOfFrames);
     }
 
     /**
@@ -65,6 +66,38 @@ public record SolarDynamicWallpaper(int numberOfFrames,
     @Override
     public DynamicWallpaperType type() {
         return DynamicWallpaperType.SOLAR;
+    }
+
+    /**
+     * Returns the wallpaper height.
+     */
+    @Override
+    public short height() {
+        return 6016;
+    }
+
+    /**
+     * Returns the wallpaper width.
+     */
+    @Override
+    public short width() {
+        return 6016;
+    }
+
+    /**
+     * Returns the wallpaper file hash.
+     */
+    @Override
+    public String hash() {
+        return "977324529fbf532ca3791e406d92acbecf535a5316a2633e892aa929a4a85af0";
+    }
+
+    /**
+     * Returns the wallpaper file name.
+     */
+    @Override
+    public String filename() {
+        return "Catalina.heic";
     }
 
     @Override

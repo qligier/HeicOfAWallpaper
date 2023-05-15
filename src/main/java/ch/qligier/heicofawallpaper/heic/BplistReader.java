@@ -32,26 +32,26 @@ public class BplistReader {
     private static final int SECONDS_IN_DAY = 86_400;
 
     public AppearanceDynamicWallpaper parseAppearanceBplist(final String base64AppearanceBplist,
-                                                            final int numberOfFrames)
+                                                            final short numberOfFrames)
         throws PropertyListFormatException, IOException, ParseException, ParserConfigurationException, SAXException, InvalidDynamicWallpaperException {
         final HashMap<String, Object> root = this.parseBase64Bplist(base64AppearanceBplist);
 
-        final int lightFrameIndex = this.getIntValue(root, THEME_LIGHT_FRAME_INDEX);
+        final short lightFrameIndex = this.getShortValue(root, THEME_LIGHT_FRAME_INDEX);
         this.checkFrameIndex(numberOfFrames, lightFrameIndex);
-        final int darkFrameIndex = this.getIntValue(root, THEME_DARK_FRAME_INDEX);
+        final short darkFrameIndex = this.getShortValue(root, THEME_DARK_FRAME_INDEX);
         this.checkFrameIndex(numberOfFrames, darkFrameIndex);
         return new AppearanceDynamicWallpaper(numberOfFrames, lightFrameIndex, darkFrameIndex);
     }
 
     public TimeDynamicWallpaper parseTimeBplist(final String base64TimeBplist,
-                                                final int numberOfFrames)
+                                                final short numberOfFrames)
         throws PropertyListFormatException, IOException, ParseException, ParserConfigurationException, SAXException, InvalidDynamicWallpaperException {
         final HashMap<String, Object> root = this.parseBase64Bplist(base64TimeBplist);
 
         final List<HashMap<String, Object>> phases = this.getDictionaryArrayValue(root, TIME_PHASES);
         final List<TimeDynamicWallpaperPhase> parsedPhases = new ArrayList<>(phases.size());
         for (final HashMap<String, Object> phase : phases) {
-            final int frameIndex = this.getIntValue(phase, FRAME_INDEX);
+            final short frameIndex = this.getShortValue(phase, FRAME_INDEX);
             this.checkFrameIndex(numberOfFrames, frameIndex);
 
             parsedPhases.add(new TimeDynamicWallpaperPhase(frameIndex,
@@ -62,7 +62,7 @@ public class BplistReader {
     }
 
     public SolarDynamicWallpaper parseSolarBplist(final String base64SolarBplist,
-                                                  final int numberOfFrames)
+                                                  final short numberOfFrames)
         throws PropertyListFormatException, IOException, ParseException, ParserConfigurationException, SAXException, InvalidDynamicWallpaperException {
         final HashMap<String, Object> root = this.parseBase64Bplist(base64SolarBplist);
 
@@ -70,7 +70,7 @@ public class BplistReader {
         final List<SolarDynamicWallpaperPhase> parsedPhases = new ArrayList<>(phases.size());
 
         for (final HashMap<String, Object> phase : phases) {
-            final int frameIndex = this.getIntValue(phase, FRAME_INDEX);
+            final short frameIndex = this.getShortValue(phase, FRAME_INDEX);
             this.checkFrameIndex(numberOfFrames, frameIndex);
             final double elevation = this.getDoubleValue(phase, ELEVATION);
             final double azimuth = this.getDoubleValue(phase, AZIMUTH);
@@ -130,14 +130,14 @@ public class BplistReader {
         return LocalTime.ofSecondOfDay(Math.round(SECONDS_IN_DAY * timePercent));
     }
 
-    private int getIntValue(final HashMap<String, Object> dictionary,
+    private short getShortValue(final HashMap<String, Object> dictionary,
                             final String key) throws InvalidDynamicWallpaperException {
         if (!dictionary.containsKey(key)) {
             throw new InvalidDynamicWallpaperException(String.format("The key '%s' is missing", key));
         }
         final Object value = dictionary.get(key);
         if (value instanceof final Integer integer) {
-            return integer;
+            return integer.shortValue();
         }
         throw new InvalidDynamicWallpaperException(String.format("The key '%s' is not an integer", key));
     }
