@@ -2,7 +2,7 @@ package ch.qligier.heicofawallpaper;
 
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.heic.PreviewGenerator;
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
+import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 
@@ -28,7 +28,7 @@ public class PreviewTest {
         final File heicFile = new File(
             "D:\\Programmation\\Java\\HeicOfAWallpaper\\src\\main\\resources\\heic\\Catalina.heic");
         //dynamicWallpaperService.extract(heicFile, null);
-        final DynamicWallpaperInterface wallpaper = dynamicWallpaperService.loadDefinition(heicFile);
+        final DynamicWallpaperDefinition wallpaper = dynamicWallpaperService.loadDefinition(heicFile);
 
         generator.generate(wallpaper, heicFile);
     }

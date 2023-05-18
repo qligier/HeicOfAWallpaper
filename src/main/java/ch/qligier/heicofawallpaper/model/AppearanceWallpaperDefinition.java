@@ -8,14 +8,24 @@ import java.util.Objects;
  * An appearance wallpaper is a dynamic wallpaper that changes frame depending on whether the light or dark theme is
  * enabled.
  *
- * @param numberOfFrames  The number of frames in the dynamic wallpaper.
- * @param lightFrameIndex The frame index of the light theme.
- * @param darkFrameIndex  The frame index of the dark theme.
  * @author Quentin Ligier
  */
-public record AppearanceDynamicWallpaper(short numberOfFrames,
-                                         short lightFrameIndex,
-                                         short darkFrameIndex) implements DynamicWallpaperInterface {
+public class AppearanceWallpaperDefinition extends DynamicWallpaperDefinition {
+
+    /**
+     * The frame index of the light theme.
+     */
+    short lightFrameIndex;
+
+    /**
+     * The frame index of the dark theme.
+     */
+    short darkFrameIndex;
+
+    public AppearanceWallpaperDefinition(final short lightFrameIndex, final short darkFrameIndex) {
+        this.lightFrameIndex = lightFrameIndex;
+        this.darkFrameIndex = darkFrameIndex;
+    }
 
     /**
      * Returns the number of phases in the dynamic wallpaper. A phase is a mapping of a frame to conditions to show the
@@ -45,58 +55,29 @@ public record AppearanceDynamicWallpaper(short numberOfFrames,
         return DynamicWallpaperType.APPEARANCE;
     }
 
-    /**
-     * Returns the wallpaper height.
-     */
-    @Override
-    public short height() {
-        return 0;
-    }
-
-    /**
-     * Returns the wallpaper width.
-     */
-    @Override
-    public short width() {
-        return 0;
-    }
-
-    /**
-     * Returns the wallpaper file hash.
-     */
-    @Override
-    public String hash() {
-        return "";
-    }
-
-    /**
-     * Returns the wallpaper file name.
-     */
-    @Override
-    public String filename() {
-        return null;
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (!(o instanceof final AppearanceDynamicWallpaper that)) return false;
-        return numberOfFrames == that.numberOfFrames
-            && lightFrameIndex == that.lightFrameIndex
+        if (!(o instanceof final AppearanceWallpaperDefinition that)) return false;
+        return lightFrameIndex == that.lightFrameIndex
             && darkFrameIndex == that.darkFrameIndex;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(numberOfFrames, lightFrameIndex, darkFrameIndex);
+        return Objects.hash(lightFrameIndex, darkFrameIndex);
     }
 
     @Override
     public String toString() {
-        return "AppearanceDynamicWallpaper{" +
-            "numberOfFrames=" + this.numberOfFrames +
-            ", lightFrameIndex=" + this.lightFrameIndex +
-            ", darkFrameIndex=" + this.darkFrameIndex +
+        return "AppearanceWallpaperDefinition{" +
+            "lightFrameIndex=" + lightFrameIndex +
+            ", darkFrameIndex=" + darkFrameIndex +
+            ", height=" + height +
+            ", width=" + width +
+            ", hash='" + hash + '\'' +
+            ", filename='" + filename + '\'' +
+            ", numberOfFrames=" + numberOfFrames +
             '}';
     }
 }

@@ -11,30 +11,30 @@ import java.util.Objects;
  * <p>
  * A time dynamic wallpaper is a dynamic wallpaper that changes frame on given time.
  *
- * @param numberOfFrames The number of frames in the dynamic wallpaper.
- * @param phases         The list of phases defined in the dynamic wallpaper.
  * @author Quentin Ligier
  **/
-public record TimeDynamicWallpaper(short numberOfFrames,
-                                   List<TimeDynamicWallpaperPhase> phases) implements DynamicWallpaperInterface {
+public class TimeWallpaperDefinition extends DynamicWallpaperDefinition {
+
+    /**
+     * The list of phases defined in the dynamic wallpaper.
+     */
+    private final List<PhaseTime> phases;
 
     /**
      * Constructor.
      *
-     * @param numberOfFrames The number of frames in the dynamic wallpaper.
-     * @param phases         The list of phases.
+     * @param phases The list of phases.
      */
-    public TimeDynamicWallpaper(final short numberOfFrames, final List<TimeDynamicWallpaperPhase> phases) {
+    public TimeWallpaperDefinition(final List<PhaseTime> phases) {
         if (numberOfFrames < 1) {
             throw new RuntimeException("The time wallpaper has 0 frame, at least one expected");
         }
         if (phases.size() == 0) {
             throw new RuntimeException("The time wallpaper has 0 phase, at least one expected");
         }
-        this.numberOfFrames = numberOfFrames;
         this.phases = phases;
         // The phases are sorted by increasing time, to facilitate search
-        this.phases.sort(Comparator.comparing(TimeDynamicWallpaperPhase::time));
+        this.phases.sort(Comparator.comparing(PhaseTime::time));
     }
 
     /**
@@ -60,7 +60,7 @@ public record TimeDynamicWallpaper(short numberOfFrames,
         Short currentFrame = this.phases.stream()
             .filter(phase -> !phase.time().isAfter(currentTime))
             .findFirst()
-            .map(TimeDynamicWallpaperPhase::frameIndex)
+            .map(PhaseTime::frameIndex)
             .orElse(null);
         if (currentFrame != null) {
             return currentFrame;
@@ -78,56 +78,27 @@ public record TimeDynamicWallpaper(short numberOfFrames,
         return DynamicWallpaperType.TIME;
     }
 
-    /**
-     * Returns the wallpaper height.
-     */
-    @Override
-    public short height() {
-        return 0;
-    }
-
-    /**
-     * Returns the wallpaper width.
-     */
-    @Override
-    public short width() {
-        return 0;
-    }
-
-    /**
-     * Returns the wallpaper file hash.
-     */
-    @Override
-    public String hash() {
-        return "";
-    }
-
-    /**
-     * Returns the wallpaper file name.
-     */
-    @Override
-    public String filename() {
-        return null;
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (!(o instanceof final TimeDynamicWallpaper that)) return false;
-        return numberOfFrames == that.numberOfFrames
-            && phases.equals(that.phases);
+        if (!(o instanceof final TimeWallpaperDefinition that)) return false;
+        return phases.equals(that.phases);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(numberOfFrames, phases);
+        return Objects.hash(phases);
     }
 
     @Override
     public String toString() {
-        return "TimeDynamicWallpaper{" +
-            "numberOfFrames=" + this.numberOfFrames +
-            ", phases=" + this.phases +
+        return "TimeWallpaperDefinition{" +
+            "phases=" + phases +
+            ", height=" + height +
+            ", width=" + width +
+            ", hash='" + hash + '\'' +
+            ", filename='" + filename + '\'' +
+            ", numberOfFrames=" + numberOfFrames +
             '}';
     }
 }

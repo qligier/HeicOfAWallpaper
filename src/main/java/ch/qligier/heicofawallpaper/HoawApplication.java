@@ -7,7 +7,7 @@ import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
+import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
@@ -81,7 +81,7 @@ public class HoawApplication extends Application {
     private DesktopWallpaperManager desktopWallpaperManager;
 
     @MonotonicNonNull
-    private Map<String, DynamicWallpaperInterface> wallpapersInFolder;
+    private Map<String, DynamicWallpaperDefinition> wallpapersInFolder;
 
     @MonotonicNonNull
     private Timer timer;
@@ -258,7 +258,7 @@ public class HoawApplication extends Application {
         }
     }
 
-    private Map<String, DynamicWallpaperInterface> loadWallpapersFromFolder() {
+    private Map<String, DynamicWallpaperDefinition> loadWallpapersFromFolder() {
         final List<File> heicFiles;
         try {
             heicFiles =
@@ -267,12 +267,12 @@ public class HoawApplication extends Application {
             return Collections.emptyMap();
         }
 
-        final Map<String, DynamicWallpaperInterface> wallpapers = new HashMap<>(heicFiles.size());
+        final Map<String, DynamicWallpaperDefinition> wallpapers = new HashMap<>(heicFiles.size());
         this.metadataExtractor.start();
         heicFiles.parallelStream()
             .forEach(heicFile -> {
                 try {
-                    wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinition(heicFile));
+                    wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinitionsFromFile(heicFile));
                 } catch (final Exception exception) {
 
                 }
@@ -329,7 +329,7 @@ public class HoawApplication extends Application {
         return this.desktopWallpaperManager;
     }
 
-    public Map<String, DynamicWallpaperInterface> getWallpapersInFolder() {
+    public Map<String, DynamicWallpaperDefinition> getWallpapersInFolder() {
         return this.wallpapersInFolder;
     }
 

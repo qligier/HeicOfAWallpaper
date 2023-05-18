@@ -9,32 +9,31 @@ import java.util.Random;
  * <p>
  * A solar dynamic wallpaper is a dynamic wallpaper that changes frame depending on the Sun position.
  *
- * @param numberOfFrames The number of frames in the dynamic wallpaper.
- * @param phases         The list of phases defined in the dynamic wallpaper.
  * @author Quentin Ligier
  * @see <a href="https://gist.github.com/ole/6b6b5ef20fbec12e9227075e20c6e6ef">Reverse-engineering the dynamic wallpaper
  * file format in macOS Mojave.</a>
  * @see <a href="https://github.com/mczachurski/wallpapper">This is simple console application for macOS to create
  * dynamic wallpapers introduced in macOS Mojave.</a>
  **/
-public record SolarDynamicWallpaper(short numberOfFrames,
-                                    List<SolarDynamicWallpaperPhase> phases) implements DynamicWallpaperInterface {
+public class SolarWallpaperDefinition extends DynamicWallpaperDefinition {
+
+    /**
+     * The list of phases defined in the dynamic wallpaper.
+     */
+    private final List<PhaseSolar> phases;
 
     /**
      * Constructs a new solar dynamic wallpaper.
      *
-     * @param numberOfFrames The number of frames in the dynamic wallpaper.
-     * @param phases         The list of phases defined in the dynamic wallpaper.
+     * @param phases The list of phases defined in the dynamic wallpaper.
      */
-    public SolarDynamicWallpaper(short numberOfFrames,
-                                 final List<SolarDynamicWallpaperPhase> phases) {
+    public SolarWallpaperDefinition(final List<PhaseSolar> phases) {
         if (numberOfFrames < 1) {
             throw new RuntimeException("The solar wallpaper has 0 frame, at least one expected");
         }
         if (phases.size() == 0) {
             throw new RuntimeException("The solar wallpaper has 0 phase, at least one expected");
         }
-        this.numberOfFrames = numberOfFrames;
         this.phases = phases;
         // The phases are sorted by ???, to facilitate search
         //this.phases.sort(Comparator.comparing(TimeDynamicWallpaperPhase::time));
@@ -68,56 +67,27 @@ public record SolarDynamicWallpaper(short numberOfFrames,
         return DynamicWallpaperType.SOLAR;
     }
 
-    /**
-     * Returns the wallpaper height.
-     */
-    @Override
-    public short height() {
-        return 6016;
-    }
-
-    /**
-     * Returns the wallpaper width.
-     */
-    @Override
-    public short width() {
-        return 6016;
-    }
-
-    /**
-     * Returns the wallpaper file hash.
-     */
-    @Override
-    public String hash() {
-        return "977324529fbf532ca3791e406d92acbecf535a5316a2633e892aa929a4a85af0";
-    }
-
-    /**
-     * Returns the wallpaper file name.
-     */
-    @Override
-    public String filename() {
-        return "Catalina.heic";
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (!(o instanceof final SolarDynamicWallpaper that)) return false;
-        return numberOfFrames == that.numberOfFrames
-            && phases.equals(that.phases);
+        if (!(o instanceof final SolarWallpaperDefinition that)) return false;
+        return phases.equals(that.phases);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(numberOfFrames, phases);
+        return Objects.hash(phases);
     }
 
     @Override
     public String toString() {
-        return "SolarDynamicWallpaper{" +
-            "numberOfFrames=" + this.numberOfFrames +
-            ", phases=" + this.phases +
+        return "SolarWallpaperDefinition{" +
+            "phases=" + phases +
+            ", height=" + height +
+            ", width=" + width +
+            ", hash='" + hash + '\'' +
+            ", filename='" + filename + '\'' +
+            ", numberOfFrames=" + numberOfFrames +
             '}';
     }
 }

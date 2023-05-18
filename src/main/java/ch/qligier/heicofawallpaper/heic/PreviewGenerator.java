@@ -1,6 +1,6 @@
 package ch.qligier.heicofawallpaper.heic;
 
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
+import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 
 import javax.imageio.ImageIO;
@@ -36,7 +36,7 @@ public class PreviewGenerator {
     private static final short MAX_FRAMES = 6;
 
 
-    public void generate(final DynamicWallpaperInterface wallpaper,
+    public void generate(final DynamicWallpaperDefinition wallpaper,
                          final File wallpaperFile) throws IOException {
         final Path destinationFolder = FileSystemService.getDataPath().resolve(wallpaper.hash());
 
@@ -105,7 +105,7 @@ public class PreviewGenerator {
         ImageIO.write(thumbnail, "png", file);
     }
 
-    protected BufferedImage loadFrame(final DynamicWallpaperInterface wallpaper,
+    protected BufferedImage loadFrame(final DynamicWallpaperDefinition wallpaper,
                                       final short frameIndex,
                                       final Path destinationFolder) throws IOException {
         final String filename = String.format("%s-%d.jpg",

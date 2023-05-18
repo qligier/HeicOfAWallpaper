@@ -9,6 +9,6 @@ import java.time.LocalTime;
  * @param time       The time to change the frame.
  * @author Quentin Ligier
  */
-public record TimeDynamicWallpaperPhase(short frameIndex,
-                                        LocalTime time) {
+public record PhaseTime(short frameIndex,
+                        LocalTime time) {
 }

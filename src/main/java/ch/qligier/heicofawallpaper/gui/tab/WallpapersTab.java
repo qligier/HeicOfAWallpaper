@@ -3,10 +3,10 @@ package ch.qligier.heicofawallpaper.gui.tab;
 import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
-import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperInterface;
-import ch.qligier.heicofawallpaper.model.SolarDynamicWallpaper;
-import ch.qligier.heicofawallpaper.model.TimeDynamicWallpaper;
+import ch.qligier.heicofawallpaper.model.AppearanceWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.SolarWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.TimeWallpaperDefinition;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -54,7 +54,7 @@ public class WallpapersTab extends AbstractContentTab {
 
     @FXML
     @MonotonicNonNull
-    protected ListView<Map.Entry<String, DynamicWallpaperInterface>> wallpaperList;
+    protected ListView<Map.Entry<String, DynamicWallpaperDefinition>> wallpaperList;
 
     protected TypeFilter typeFilter = TypeFilter.ALL;
 
@@ -119,15 +119,15 @@ public class WallpapersTab extends AbstractContentTab {
      */
     private enum TypeFilter {
         ALL("All", wallpaper -> true),
-        SOLAR("Solar", SolarDynamicWallpaper.class::isInstance),
-        TIME("Time", TimeDynamicWallpaper.class::isInstance),
-        APPEARANCE("Appearance", AppearanceDynamicWallpaper.class::isInstance);
+        SOLAR("Solar", SolarWallpaperDefinition.class::isInstance),
+        TIME("Time", TimeWallpaperDefinition.class::isInstance),
+        APPEARANCE("Appearance", AppearanceWallpaperDefinition.class::isInstance);
 
         private final String display;
-        private final Function<DynamicWallpaperInterface, Boolean> filter;
+        private final Function<DynamicWallpaperDefinition, Boolean> filter;
 
         TypeFilter(final String display,
-                   final Function<DynamicWallpaperInterface, Boolean> filter) {
+                   final Function<DynamicWallpaperDefinition, Boolean> filter) {
             this.display = display;
             this.filter = filter;
         }
@@ -136,7 +136,7 @@ public class WallpapersTab extends AbstractContentTab {
             return this.display;
         }
 
-        public Function<DynamicWallpaperInterface, Boolean> getFilter() {
+        public Function<DynamicWallpaperDefinition, Boolean> getFilter() {
             return this.filter;
         }
 
@@ -146,9 +146,9 @@ public class WallpapersTab extends AbstractContentTab {
         }
     }
 
-    private static class WallpaperCell extends ListCell<Map.Entry<String, DynamicWallpaperInterface>> {
+    private static class WallpaperCell extends ListCell<Map.Entry<String, DynamicWallpaperDefinition>> {
         @Override
-        protected void updateItem(final Map.@Nullable Entry<String, DynamicWallpaperInterface> entry,
+        protected void updateItem(final Map.@Nullable Entry<String, DynamicWallpaperDefinition> entry,
                                   final boolean empty) {
             super.updateItem(entry, empty);
             if (empty || entry == null) {

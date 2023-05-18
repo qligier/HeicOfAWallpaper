@@ -1,9 +1,9 @@
 package ch.qligier.heicofawallpaper.heic;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
-import ch.qligier.heicofawallpaper.model.AppearanceDynamicWallpaper;
-import ch.qligier.heicofawallpaper.model.SolarDynamicWallpaper;
-import ch.qligier.heicofawallpaper.model.TimeDynamicWallpaper;
+import ch.qligier.heicofawallpaper.model.AppearanceWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.SolarWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.TimeWallpaperDefinition;
 import com.dd.plist.PropertyListFormatException;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
@@ -28,7 +28,7 @@ class BplistReaderTest {
     @Test
     void parseAppearanceBplist()
         throws PropertyListFormatException, InvalidDynamicWallpaperException, IOException, ParseException, ParserConfigurationException, SAXException {
-        final AppearanceDynamicWallpaper appearance = this.reader.parseAppearanceBplist(
+        final AppearanceWallpaperDefinition appearance = this.reader.parseAppearanceBplist(
             "YnBsaXN0MDDSAQIDBFFkUWwQARAACA0PERMAAAAAAAABAQAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAFQ==",
             2);
 
@@ -41,7 +41,7 @@ class BplistReaderTest {
     @Test
     void parseTimeBplist()
         throws PropertyListFormatException, InvalidDynamicWallpaperException, IOException, ParseException, ParserConfigurationException, SAXException {
-        final TimeDynamicWallpaper time = this.reader.parseTimeBplist(
+        final TimeWallpaperDefinition time = this.reader.parseTimeBplist(
             "YnBsaXN0MDDSAQIDD1J0aVJhcKMECQzSBQYHCFF0UWkjP9AAAAAAAAAQANIFBgoLIwAAAAAAAAAAEAHSBQYNDiM/6AAAAAAAABAC0hARDghRZFFsCA0QExccHiApKzA5O0BJS1BSAAAAAAAAAQEAAAAAAAAAEgAAAAAAAAAAAAAAAAAAAFQ=",
             3);
 
@@ -58,7 +58,7 @@ class BplistReaderTest {
     @Test
     void parseSolarMetadata()
         throws PropertyListFormatException, InvalidDynamicWallpaperException, IOException, ParseException, ParserConfigurationException, SAXException {
-        final SolarDynamicWallpaper solar = this.reader.parseSolarBplist(
+        final SolarWallpaperDefinition solar = this.reader.parseSolarBplist(
             "YnBsaXN0MDDSAQIDCFJhcFJzadIEBQYHUWxRZBAAEAGqCQ8SFhkdISMmKdMKCwwNDgZRYVF6UWkjAAAAAAAAAAAjQHDgAAAAAADTCgsMEBEHI8A5AAAAAAAAI0BRgAAAAAAA0woLDBMUFSPAIgAAAAAAACNAVAAAAAAAABAC0woLDA0XGCNAVoAAAAAAABAD0woLDBobHCNAJAAAAAAAACNAWQAAAAAAABAE0woLDB4fICNAOQAAAAAAACNAW4AAAAAAABAF0woLDB4iICNAb0AAAAAAANMKCwwaJCUjQHBAAAAAAAAQBtMKCwwTJygjQHGAAAAAAAAQB9MKCwwQKgcjQHIgAAAAAAAACAANABAAEwAYABoAHAAeACAAKwAyADQANgA4AEEASgBRAFoAYwBqAHMAfAB+AIUAjgCQAJcAoACpAKsAsgC7AMQAxgDNANYA3QDmAOgA7wD4APoBAQAAAAAAAAIBAAAAAAAAACsAAAAAAAAAAAAAAAAAAAEK",
             8);
 
