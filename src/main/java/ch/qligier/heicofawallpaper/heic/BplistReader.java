@@ -32,83 +32,84 @@ public class BplistReader {
     private static final String AZIMUTH = "z";
     private static final int SECONDS_IN_DAY = 86_400;
 
-    public AppearanceWallpaperDefinition parseAppearanceBplist(final String base64AppearanceBplist,
-                                                               final short numberOfFrames)
+    public static AppearanceWallpaperDefinition parseAppearanceBplist(final String base64AppearanceBplist,
+                                                                      final short numberOfFrames)
         throws PropertyListFormatException, IOException, ParseException, ParserConfigurationException, SAXException, InvalidDynamicWallpaperException {
-        final HashMap<String, Object> root = this.parseBase64Bplist(base64AppearanceBplist);
+        final HashMap<String, Object> root = parseBase64Bplist(base64AppearanceBplist);
 
-        return this.parseAppearanceDictionary(root);
+        return parseAppearanceDictionary(root);
     }
 
-    public List<DynamicWallpaperDefinition> parseTimeBplist(final String base64TimeBplist,
-                                                            final short numberOfFrames) throws Exception {
+    public static List<DynamicWallpaperDefinition> parseTimeBplist(final String base64TimeBplist,
+                                                                   final short numberOfFrames) throws Exception {
         final List<DynamicWallpaperDefinition> definitions = new ArrayList<>(2);
-        final HashMap<String, Object> root = this.parseBase64Bplist(base64TimeBplist);
+        final HashMap<String, Object> root = parseBase64Bplist(base64TimeBplist);
 
         // Extract time phases
-        final List<HashMap<String, Object>> phases = this.getDictionaryArrayValue(root, TIME_PHASES);
+        final List<HashMap<String, Object>> phases = getDictionaryArrayValue(root, TIME_PHASES);
         final List<PhaseTime> parsedPhases = new ArrayList<>(phases.size());
         for (final HashMap<String, Object> phase : phases) {
-            final short frameIndex = this.getShortValue(phase, FRAME_INDEX);
-            this.checkFrameIndex(numberOfFrames, frameIndex);
+            final short frameIndex = getShortValue(phase, FRAME_INDEX);
+            checkFrameIndex(numberOfFrames, frameIndex);
 
             parsedPhases.add(new PhaseTime(frameIndex,
-                                           this.parseTimePercent(this.getFloatValue(phase, TIME))));
+                                           parseTimePercent(getFloatValue(phase, TIME))));
         }
         definitions.add(new TimeWallpaperDefinition(parsedPhases));
 
         // Extract appearance phases
         if (root.containsKey(APPEARANCE_PHASES)) {
-            final HashMap<String, Object> appearancePhases = this.getDictionaryValue(root, APPEARANCE_PHASES);
-            definitions.add(this.parseAppearanceDictionary(appearancePhases));
+            final HashMap<String, Object> appearancePhases = getDictionaryValue(root, APPEARANCE_PHASES);
+            definitions.add(parseAppearanceDictionary(appearancePhases));
         }
 
         return definitions;
     }
 
-    public List<DynamicWallpaperDefinition> parseSolarBplist(final String base64SolarBplist,
-                                                             final short numberOfFrames) throws Exception {
+    public static List<DynamicWallpaperDefinition> parseSolarBplist(final String base64SolarBplist,
+                                                                    final short numberOfFrames) throws Exception {
         final List<DynamicWallpaperDefinition> definitions = new ArrayList<>(2);
-        final HashMap<String, Object> root = this.parseBase64Bplist(base64SolarBplist);
+        final HashMap<String, Object> root = parseBase64Bplist(base64SolarBplist);
 
         // Extract solar phases
         final List<HashMap<String, Object>> phases = getDictionaryArrayValue(root, SOLAR_PHASES);
         final List<PhaseSolar> parsedPhases = new ArrayList<>(phases.size());
         for (final HashMap<String, Object> phase : phases) {
-            final short frameIndex = this.getShortValue(phase, FRAME_INDEX);
-            this.checkFrameIndex(numberOfFrames, frameIndex);
-            final float elevation = this.getFloatValue(phase, ELEVATION);
-            final float azimuth = this.getFloatValue(phase, AZIMUTH);
+            final short frameIndex = getShortValue(phase, FRAME_INDEX);
+            checkFrameIndex(numberOfFrames, frameIndex);
+            final float elevation = getFloatValue(phase, ELEVATION);
+            final float azimuth = getFloatValue(phase, AZIMUTH);
             parsedPhases.add(new PhaseSolar(frameIndex, elevation, azimuth));
         }
         definitions.add(new SolarWallpaperDefinition(parsedPhases));
 
         // Extract appearance phases
         if (root.containsKey(APPEARANCE_PHASES)) {
-            final HashMap<String, Object> appearancePhases = this.getDictionaryValue(root, APPEARANCE_PHASES);
-            definitions.add(this.parseAppearanceDictionary(appearancePhases));
+            final HashMap<String, Object> appearancePhases = getDictionaryValue(root, APPEARANCE_PHASES);
+            definitions.add(parseAppearanceDictionary(appearancePhases));
         }
 
         return definitions;
     }
 
-    protected AppearanceWallpaperDefinition parseAppearanceDictionary(final HashMap<String, Object> dictionary)
+    protected static AppearanceWallpaperDefinition parseAppearanceDictionary(final HashMap<String, Object> dictionary)
         throws InvalidDynamicWallpaperException {
-        final short lightFrameIndex = this.getShortValue(dictionary, THEME_LIGHT_FRAME_INDEX);
+        final short lightFrameIndex = getShortValue(dictionary, THEME_LIGHT_FRAME_INDEX);
         //this.checkFrameIndex(numberOfFrames, lightFrameIndex);
-        final short darkFrameIndex = this.getShortValue(dictionary, THEME_DARK_FRAME_INDEX);
+        final short darkFrameIndex = getShortValue(dictionary, THEME_DARK_FRAME_INDEX);
         //this.checkFrameIndex(numberOfFrames, darkFrameIndex);
         return new AppearanceWallpaperDefinition(lightFrameIndex, darkFrameIndex);
     }
 
-    private HashMap<String, Object> parseBase64Bplist(final String base64Bplist)
+    private static HashMap<String, Object> parseBase64Bplist(final String base64Bplist)
         throws PropertyListFormatException, IOException, ParseException, ParserConfigurationException, SAXException {
         final byte[] bplist = Base64.getDecoder().decode(base64Bplist);
         return (HashMap<String, Object>) PropertyListParser.parse(bplist).toJavaObject();
     }
 
-    private HashMap<String, Object> getDictionaryValue(final HashMap<String, Object> dictionary,
-                                                       final String key) throws InvalidDynamicWallpaperException {
+    private static HashMap<String, Object> getDictionaryValue(final HashMap<String, Object> dictionary,
+                                                              final String key)
+        throws InvalidDynamicWallpaperException {
         if (!dictionary.containsKey(key)) {
             throw new InvalidDynamicWallpaperException(String.format("The key '%s' is missing", key));
         }
@@ -119,8 +120,8 @@ public class BplistReader {
         throw new InvalidDynamicWallpaperException(String.format("The key '%s' is not a dictionary", key));
     }
 
-    private List<HashMap<String, Object>> getDictionaryArrayValue(final HashMap<String, Object> dictionary,
-                                                                  final String key)
+    private static List<HashMap<String, Object>> getDictionaryArrayValue(final HashMap<String, Object> dictionary,
+                                                                         final String key)
         throws InvalidDynamicWallpaperException {
         if (!dictionary.containsKey(key)) {
             throw new InvalidDynamicWallpaperException(String.format("The key '%s' is missing", key));
@@ -141,7 +142,7 @@ public class BplistReader {
         return result;
     }
 
-    protected LocalTime parseTimePercent(final double timePercent) throws InvalidDynamicWallpaperException {
+    protected static LocalTime parseTimePercent(final double timePercent) throws InvalidDynamicWallpaperException {
         if (timePercent < 0 || timePercent > 1) {
             throw new InvalidDynamicWallpaperException(String.format("The timePercent '%f' is invalid", timePercent));
         }
@@ -151,8 +152,8 @@ public class BplistReader {
         return LocalTime.ofSecondOfDay(Math.round(SECONDS_IN_DAY * timePercent));
     }
 
-    private short getShortValue(final HashMap<String, Object> dictionary,
-                                final String key) throws InvalidDynamicWallpaperException {
+    private static short getShortValue(final HashMap<String, Object> dictionary,
+                                       final String key) throws InvalidDynamicWallpaperException {
         if (!dictionary.containsKey(key)) {
             throw new InvalidDynamicWallpaperException(String.format("The key '%s' is missing", key));
         }
@@ -163,8 +164,8 @@ public class BplistReader {
         throw new InvalidDynamicWallpaperException(String.format("The key '%s' is not an integer", key));
     }
 
-    private float getFloatValue(final HashMap<String, Object> dictionary,
-                                final String key) throws InvalidDynamicWallpaperException {
+    private static float getFloatValue(final HashMap<String, Object> dictionary,
+                                       final String key) throws InvalidDynamicWallpaperException {
         if (!dictionary.containsKey(key)) {
             throw new InvalidDynamicWallpaperException(String.format("The key '%s' is missing", key));
         }
@@ -177,8 +178,8 @@ public class BplistReader {
         throw new InvalidDynamicWallpaperException(String.format("The key '%s' is not a float", key));
     }
 
-    private void checkFrameIndex(final int numberOfFrames,
-                                 final int frameIndex) throws InvalidDynamicWallpaperException {
+    private static void checkFrameIndex(final int numberOfFrames,
+                                        final int frameIndex) throws InvalidDynamicWallpaperException {
         if (frameIndex >= numberOfFrames) {
             throw new InvalidDynamicWallpaperException(String.format("The frame index '%d' is invalid, %d frames " +
                                                                          "found", frameIndex, numberOfFrames));

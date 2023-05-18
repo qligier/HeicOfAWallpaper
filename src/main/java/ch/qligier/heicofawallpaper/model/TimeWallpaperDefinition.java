@@ -26,10 +26,7 @@ public class TimeWallpaperDefinition extends DynamicWallpaperDefinition {
      * @param phases The list of phases.
      */
     public TimeWallpaperDefinition(final List<PhaseTime> phases) {
-        if (numberOfFrames < 1) {
-            throw new RuntimeException("The time wallpaper has 0 frame, at least one expected");
-        }
-        if (phases.size() == 0) {
+        if (phases.isEmpty()) {
             throw new RuntimeException("The time wallpaper has 0 phase, at least one expected");
         }
         this.phases = phases;
@@ -78,6 +75,10 @@ public class TimeWallpaperDefinition extends DynamicWallpaperDefinition {
         return DynamicWallpaperType.TIME;
     }
 
+    public List<PhaseTime> getPhases() {
+        return this.phases;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
@@ -96,7 +97,7 @@ public class TimeWallpaperDefinition extends DynamicWallpaperDefinition {
             "phases=" + phases +
             ", height=" + height +
             ", width=" + width +
-            ", hash='" + hash + '\'' +
+            ", hash='" + fileHash + '\'' +
             ", filename='" + filename + '\'' +
             ", numberOfFrames=" + numberOfFrames +
             '}';

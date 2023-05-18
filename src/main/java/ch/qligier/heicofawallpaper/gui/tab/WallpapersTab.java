@@ -21,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -54,7 +53,7 @@ public class WallpapersTab extends AbstractContentTab {
 
     @FXML
     @MonotonicNonNull
-    protected ListView<Map.Entry<String, DynamicWallpaperDefinition>> wallpaperList;
+    protected ListView<DynamicWallpaperDefinition> wallpaperList;
 
     protected TypeFilter typeFilter = TypeFilter.ALL;
 
@@ -101,9 +100,8 @@ public class WallpapersTab extends AbstractContentTab {
     protected void onListRefresh() {
         final var allWallpapers = this.app.getWallpapersInFolder();
         final var filteredWallpapers = allWallpapers
-            .entrySet()
             .stream()
-            .filter(entry -> this.typeFilter.getFilter().apply(entry.getValue()))
+            .filter(entry -> this.typeFilter.getFilter().apply(entry))
             .toList();
         this.wallpaperList.setItems(FXCollections.observableList(filteredWallpapers));
 
@@ -146,9 +144,9 @@ public class WallpapersTab extends AbstractContentTab {
         }
     }
 
-    private static class WallpaperCell extends ListCell<Map.Entry<String, DynamicWallpaperDefinition>> {
+    private static class WallpaperCell extends ListCell<DynamicWallpaperDefinition> {
         @Override
-        protected void updateItem(final Map.@Nullable Entry<String, DynamicWallpaperDefinition> entry,
+        protected void updateItem(final @Nullable DynamicWallpaperDefinition entry,
                                   final boolean empty) {
             super.updateItem(entry, empty);
             if (empty || entry == null) {
@@ -157,7 +155,7 @@ public class WallpapersTab extends AbstractContentTab {
             }
             final HBox hBox = new HBox();
 
-            final String iconName = switch (entry.getValue().type()) {
+            final String iconName = switch (entry.type()) {
                 case APPEARANCE -> "brush.png";
                 case TIME -> "clock.png";
                 case SOLAR -> "sun.png";
@@ -168,7 +166,7 @@ public class WallpapersTab extends AbstractContentTab {
             imageView.setFitWidth(20);
             hBox.getChildren().add(imageView);
 
-            hBox.getChildren().add(new Text(entry.getKey()));
+            hBox.getChildren().add(new Text(entry.filename()));
 
             setGraphic(hBox);
         }

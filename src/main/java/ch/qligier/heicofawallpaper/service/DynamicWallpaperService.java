@@ -7,7 +7,7 @@ import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
 import com.dd.plist.PropertyListFormatException;
 import com.thebuzzmedia.exiftool.Tag;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import com.thebuzzmedia.exiftool.core.StandardTag;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,12 +35,7 @@ public class DynamicWallpaperService {
     }
 
     public void extract(final File dynamicWallpaperFile,
-                        @Nullable String hash) throws IOException, InterruptedException {
-        System.out.println("extract");
-        if (hash == null) {
-            hash = FileSystemService.sha256File(dynamicWallpaperFile);
-        }
-
+                        final String hash) throws IOException, InterruptedException {
         final File destinationFolder = FileSystemService.getDataPath().resolve(hash).toFile();
         destinationFolder.mkdirs();
 
@@ -70,7 +65,13 @@ public class DynamicWallpaperService {
      * @param wallpaperCachePath
      * @return
      */
-    public List<DynamicWallpaperDefinition> loadDefinitionsFromCache(final Path wallpaperCachePath) {
+    public List<DynamicWallpaperDefinition> loadDefinitionsFromCache(final Path wallpaperCachePath) throws IOException {
+
+        /*return Files.list(wallpaperCachePath)
+            .filter(path -> path.toFile().isDirectory())
+            .map(path -> path.resolve("cache.json"))
+            .filter(path -> path.toFile().isFile())
+            .;*/
         return null;
     }
 
@@ -87,32 +88,61 @@ public class DynamicWallpaperService {
      * @throws ParseException
      * @throws ParserConfigurationException
      * @throws SAXException
+     * @implSpec The caller must ensure the {@code metadataExtractor} has been started and will be closed.
      */
     public List<DynamicWallpaperDefinition> loadDefinitionsFromFile(final File dynamicWallpaperFile) throws Exception {
+        assert this.metadataExtractor.isStarted();
         final Map<Tag, String> metadata = this.metadataExtractor.getMetadata(dynamicWallpaperFile);
 
-        final short numberOfFrames = this.getNumberOfFrames(metadata);
+        final short width = Short.parseShort(metadata.get(StandardTag.IMAGE_WIDTH));
+        final short height = Short.parseShort(metadata.get(StandardTag.IMAGE_HEIGHT));
 
-        if (metadata.containsKey(CustomTag.XMP_SOLAR)) {
-            return this.bplistReader.parseSolarBplist(metadata.get(CustomTag.XMP_SOLAR), numberOfFrames);
-        } else if (metadata.containsKey(CustomTag.XMP_H24)) {
-            return this.bplistReader.parseTimeBplist(metadata.get(CustomTag.XMP_H24), numberOfFrames);
-        } else if (metadata.containsKey(CustomTag.XMP_APR)) {
-            return List.of(this.bplistReader.parseAppearanceBplist(metadata.get(CustomTag.XMP_APR), numberOfFrames));
-        }
-        throw new InvalidDynamicWallpaperException("The dynamic wallpaper has no Solar, H24 or Apr metadata");
-    }
-
-    private short getNumberOfFrames(final Map<Tag, String> metadata) throws InvalidDynamicWallpaperException {
+        final short numberOfFrames;
         if (metadata.containsKey(CustomTag.QUICKTIME_METAIMAGESIZE)) {
             final String[] metaImageSizes = metadata.get(CustomTag.QUICKTIME_METAIMAGESIZE).split(" ");
             if (metaImageSizes.length % 4 != 0) {
                 throw new InvalidDynamicWallpaperException("The MetaImageSize has a number of values not divisible by 4");
             }
-            return (short) (metaImageSizes.length / 4 + 1); // TODO: Main image not here?
+            numberOfFrames = (short) (metaImageSizes.length / 4);
+            for (int i = 0; i < numberOfFrames; ) {
+                i = i + 2;
+                if (Short.parseShort(metaImageSizes[i]) != width) {
+                    throw new InvalidDynamicWallpaperException("One of the frame has a different width");
+                }
+                ++i;
+                if (Short.parseShort(metaImageSizes[i]) != height) {
+                    throw new InvalidDynamicWallpaperException("One of the frame has a different height");
+                }
+                ++i;
+            }
+        } else {
+            numberOfFrames = 0;
         }
 
-        throw new InvalidDynamicWallpaperException("The MetaImageSize is missing");
+        final List<DynamicWallpaperDefinition> definitions;
+        final String bplist;
+        if (metadata.containsKey(CustomTag.XMP_SOLAR)) {
+            bplist = metadata.get(CustomTag.XMP_SOLAR);
+            definitions = BplistReader.parseSolarBplist(bplist, numberOfFrames);
+        } else if (metadata.containsKey(CustomTag.XMP_H24)) {
+            bplist = metadata.get(CustomTag.XMP_H24);
+            definitions = BplistReader.parseTimeBplist(bplist, numberOfFrames);
+        } else if (metadata.containsKey(CustomTag.XMP_APR)) {
+            bplist = metadata.get(CustomTag.XMP_APR);
+            definitions = List.of(BplistReader.parseAppearanceBplist(bplist, numberOfFrames));
+        } else {
+            throw new InvalidDynamicWallpaperException("The dynamic wallpaper has no Solar, H24 or Apr metadata");
+        }
+
+        for (final var definition : definitions) {
+            definition.setWidth(width);
+            definition.setHeight(height);
+            definition.setFilename(dynamicWallpaperFile.getName());
+            definition.setHash(FileSystemService.sha256File(dynamicWallpaperFile));
+            definition.setNumberOfFrames(numberOfFrames);
+            definition.setBplist(bplist);
+        }
+        return definitions;
     }
 
     /**

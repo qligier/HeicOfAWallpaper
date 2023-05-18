@@ -29,7 +29,7 @@ public class TrayIconManager {
         Objects.requireNonNull(stage, "stage shall not be null in TrayIcon()");
         Objects.requireNonNull(app, "app shall not be null in TrayIcon()");
         this.icon = new FXTrayIcon.Builder(stage, TrayIconManager.class.getResource("/icon/logo_color_128.png"))
-            .menuItem("Settings…", e -> app.showWindow())
+            .menuItem("Settings…", e -> app.openAppWindow())
             .addExitMenuItem()
             .show()
             .build();

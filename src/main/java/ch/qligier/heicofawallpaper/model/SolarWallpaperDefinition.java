@@ -28,10 +28,7 @@ public class SolarWallpaperDefinition extends DynamicWallpaperDefinition {
      * @param phases The list of phases defined in the dynamic wallpaper.
      */
     public SolarWallpaperDefinition(final List<PhaseSolar> phases) {
-        if (numberOfFrames < 1) {
-            throw new RuntimeException("The solar wallpaper has 0 frame, at least one expected");
-        }
-        if (phases.size() == 0) {
+        if (phases.isEmpty()) {
             throw new RuntimeException("The solar wallpaper has 0 phase, at least one expected");
         }
         this.phases = phases;
@@ -67,6 +64,10 @@ public class SolarWallpaperDefinition extends DynamicWallpaperDefinition {
         return DynamicWallpaperType.SOLAR;
     }
 
+    public List<PhaseSolar> getPhases() {
+        return this.phases;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
@@ -85,7 +86,7 @@ public class SolarWallpaperDefinition extends DynamicWallpaperDefinition {
             "phases=" + phases +
             ", height=" + height +
             ", width=" + width +
-            ", hash='" + hash + '\'' +
+            ", hash='" + fileHash + '\'' +
             ", filename='" + filename + '\'' +
             ", numberOfFrames=" + numberOfFrames +
             '}';

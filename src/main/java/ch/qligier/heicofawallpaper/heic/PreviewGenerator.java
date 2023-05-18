@@ -6,7 +6,6 @@ import ch.qligier.heicofawallpaper.service.FileSystemService;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.Logger;
@@ -36,9 +35,8 @@ public class PreviewGenerator {
     private static final short MAX_FRAMES = 6;
 
 
-    public void generate(final DynamicWallpaperDefinition wallpaper,
-                         final File wallpaperFile) throws IOException {
-        final Path destinationFolder = FileSystemService.getDataPath().resolve(wallpaper.hash());
+    public static BufferedImage generate(final DynamicWallpaperDefinition wallpaper) throws IOException {
+        final Path cacheDirectory = FileSystemService.getDataPath().resolve(wallpaper.fileHash());
 
         // All calcules are made with the original size of the wallpaper. Resizing is done at the end
         final float wallpaperRatio = (float) wallpaper.width() / wallpaper.height();
@@ -77,12 +75,12 @@ public class PreviewGenerator {
         final short boundaryDeltaX = (short) Math.round(0.08 * croppedWidth);
 
         // Frame 0: copy the whole image
-        final BufferedImage preview = this.loadFrame(wallpaper, (short) 0, destinationFolder);
+        final BufferedImage preview = loadFrame((short) 0, cacheDirectory);
 
         // For the next frames, copy only part of the image
         for (short frameIndex = 1; frameIndex < effectiveFrameNumber; ++frameIndex) {
             final Graphics2D graphics = preview.createGraphics();
-            final BufferedImage frame = this.loadFrame(wallpaper, frameIndex, destinationFolder);
+            final BufferedImage frame = loadFrame(frameIndex, cacheDirectory);
 
             final short boundaryX = (short) (frameIndex * frameWidth + minX);
             final Shape shape = new Polygon(new int[]{boundaryX + boundaryDeltaX, boundaryX - boundaryDeltaX, maxX,
@@ -101,16 +99,12 @@ public class PreviewGenerator {
         graphics.drawImage(rescaled, 0, 0, null);
         graphics.dispose();
 
-        final File file = new File("preview.png");
-        ImageIO.write(thumbnail, "png", file);
+        return thumbnail;
     }
 
-    protected BufferedImage loadFrame(final DynamicWallpaperDefinition wallpaper,
-                                      final short frameIndex,
-                                      final Path destinationFolder) throws IOException {
-        final String filename = String.format("%s-%d.jpg",
-                                              wallpaper.filename().substring(0, wallpaper.filename().length() - 5),
-                                              frameIndex);
-        return ImageIO.read(destinationFolder.resolve(filename).toFile());
+    protected static BufferedImage loadFrame(final short frameIndex,
+                                             final Path cacheDirectory) throws IOException {
+        final String filename = String.format("frame-%d.jpg", frameIndex);
+        return ImageIO.read(cacheDirectory.resolve(filename).toFile());
     }
 }

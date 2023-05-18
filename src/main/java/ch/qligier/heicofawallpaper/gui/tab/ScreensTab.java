@@ -4,6 +4,7 @@ import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.configuration.RuntimeConfiguration;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
+import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ChoiceBox;
@@ -13,6 +14,7 @@ import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The 'screens' tab controller.
@@ -44,7 +46,9 @@ public class ScreensTab extends AbstractContentTab {
 
     @FXML
     protected void onListRefresh() {
-        final Set<String> heicFiles = this.app.getWallpapersInFolder().keySet();
+        final Set<String> heicFilenames = this.app.getWallpapersInFolder().stream()
+            .map(DynamicWallpaperDefinition::filename)
+            .collect(Collectors.toSet());
         final var choices = this.app.getUserConfiguration().getWallpaperChoices();
 
         this.screenList.getChildren().clear();
@@ -58,7 +62,7 @@ public class ScreensTab extends AbstractContentTab {
 
             final ChoiceBox<String> choiceBox = new ChoiceBox<>();
             choiceBox.getItems().add(NO_CHOICE);
-            choiceBox.getItems().addAll(heicFiles);
+            choiceBox.getItems().addAll(heicFilenames);
             choiceBox.setValue(choices.getOrDefault(monitor.devicePath(), NO_CHOICE));
             hBox.getChildren().add(choiceBox);
             choiceBox.setOnAction(event -> {

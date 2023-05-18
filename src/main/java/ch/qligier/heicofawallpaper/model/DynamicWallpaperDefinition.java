@@ -23,7 +23,7 @@ public abstract class DynamicWallpaperDefinition {
      * The wallpaper file hash.
      */
     @MonotonicNonNull
-    protected String hash = null;
+    protected String fileHash = null;
 
     /**
      * The wallpaper filename.
@@ -32,9 +32,21 @@ public abstract class DynamicWallpaperDefinition {
     protected String filename = null;
 
     /**
+     * The wallpaper bplist metadata, base64-encoded.
+     */
+    @MonotonicNonNull
+    protected String bplist = null;
+    /**
      * The number of frames in the wallpaper (not to be mistaken with the number of phases).
      */
     protected short numberOfFrames;
+
+    /**
+     * Returns the identifier of this dynamic wallpaper definition.
+     */
+    public String identifier() {
+        return String.format("%s-%s", this.fileHash, this.type().name());
+    }
 
     /**
      * Returns the number of phases in the dynamic wallpaper. A phase is a mapping of a frame to conditions to show the
@@ -72,8 +84,8 @@ public abstract class DynamicWallpaperDefinition {
     /**
      * Returns the wallpaper file hash.
      */
-    public String hash() {
-        return this.hash;
+    public String fileHash() {
+        return this.fileHash;
     }
 
     /**
@@ -81,6 +93,13 @@ public abstract class DynamicWallpaperDefinition {
      */
     public String filename() {
         return this.filename;
+    }
+
+    /**
+     * Returns the wallpaper bplist metadata.
+     */
+    public String bplist() {
+        return this.bplist;
     }
 
     /**
@@ -99,7 +118,7 @@ public abstract class DynamicWallpaperDefinition {
     }
 
     public void setHash(final String hash) {
-        this.hash = hash;
+        this.fileHash = hash;
     }
 
     public void setFilename(final String filename) {
@@ -108,5 +127,9 @@ public abstract class DynamicWallpaperDefinition {
 
     public void setNumberOfFrames(final short numberOfFrames) {
         this.numberOfFrames = numberOfFrames;
+    }
+
+    public void setBplist(final String bplist) {
+        this.bplist = bplist;
     }
 }

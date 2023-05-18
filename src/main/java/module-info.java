@@ -9,7 +9,6 @@ module ch.qligier.heicofawallpaper {
     requires com.dlsc.formsfx;
     requires com.sandec.mdfx;
     requires com.dustinredmond.fxtrayicon;
-    requires org.libheiffx;
 
     // JNA
     requires com.sun.jna;
@@ -30,4 +29,5 @@ module ch.qligier.heicofawallpaper {
     exports ch.qligier.heicofawallpaper.win32;
     opens ch.qligier.heicofawallpaper.gui to javafx.fxml;
     opens ch.qligier.heicofawallpaper.gui.tab to javafx.fxml;
+    opens ch.qligier.heicofawallpaper.model to com.google.gson;
 }

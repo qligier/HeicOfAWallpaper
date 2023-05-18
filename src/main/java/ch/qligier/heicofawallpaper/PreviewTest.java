@@ -28,8 +28,8 @@ public class PreviewTest {
         final File heicFile = new File(
             "D:\\Programmation\\Java\\HeicOfAWallpaper\\src\\main\\resources\\heic\\Catalina.heic");
         //dynamicWallpaperService.extract(heicFile, null);
-        final DynamicWallpaperDefinition wallpaper = dynamicWallpaperService.loadDefinition(heicFile);
+        final DynamicWallpaperDefinition wallpaper = dynamicWallpaperService.loadDefinitionsFromFile(heicFile).get(0);
 
-        generator.generate(wallpaper, heicFile);
+        PreviewGenerator.generate(wallpaper);
     }
 }

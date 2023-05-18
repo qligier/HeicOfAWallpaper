@@ -79,12 +79,6 @@
             <artifactId>FXTrayIcon</artifactId>
             <version>4.0.1</version>
         </dependency>
-        <!-- A Java wrapper of libheif for JavaFx -->
-        <dependency>
-            <groupId>org.libheiffx</groupId>
-            <artifactId>LibHeifFX</artifactId>
-            <version>1.2.3</version>
-        </dependency>
 
         <!-- A JSON de/ser library -->
         <dependency>

@@ -47,14 +47,25 @@ public class MetadataExtractor {
 
     /**
      * Clears a pool of ExifTool services.
-     *
-     * @throws Exception if an error occurred while closing exiftool clients.
      */
-    public void close() throws Exception {
+    public void close() {
         if (this.exifTool == null) {
             return;
         }
-        this.exifTool.close();
+        try {
+            this.exifTool.close();
+        } catch (final Exception exception) {
+            // Log that failure
+        } finally {
+            this.exifTool = null;
+        }
+    }
+
+    /**
+     * Returns whether the ExifTool pool has been created.
+     */
+    public boolean isStarted() {
+        return this.exifTool != null;
     }
 
     /**

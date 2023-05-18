@@ -6,6 +6,8 @@ import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
+import ch.qligier.heicofawallpaper.heic.PreviewGenerator;
+import ch.qligier.heicofawallpaper.model.CachedWallpaperDefinition;
 import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
 import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
@@ -23,8 +25,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +49,9 @@ import java.util.logging.Logger;
 public class HoawApplication extends Application {
     private static final Logger LOG = Logger.getLogger("HoawApplication");
 
-    private static final long REFRESH_DELAY_MS = 1000 * 60;
+    private static final int REFRESH_DELAY_MS = 1000 * 60;
+
+    private final Gson gson = new Gson();
 
     /**
      *
@@ -61,6 +68,12 @@ public class HoawApplication extends Application {
      */
     @MonotonicNonNull
     private Stage mainStage;
+
+    /**
+     * The application window, if it is opened.
+     */
+    @Nullable
+    private Stage appWindow;
 
     /**
      * The runtime configuration. The field is assigned in {@link #start(Stage)}.
@@ -81,7 +94,7 @@ public class HoawApplication extends Application {
     private DesktopWallpaperManager desktopWallpaperManager;
 
     @MonotonicNonNull
-    private Map<String, DynamicWallpaperDefinition> wallpapersInFolder;
+    private List<DynamicWallpaperDefinition> wallpaperDefinitions;
 
     @MonotonicNonNull
     private Timer timer;
@@ -105,7 +118,6 @@ public class HoawApplication extends Application {
      */
     @Override
     public void start(final Stage stage) {
-        System.out.println("start");
         this.mainStage = stage;
         new TrayIconManager(this.mainStage, this);
 
@@ -113,7 +125,7 @@ public class HoawApplication extends Application {
         this.runtimeConfiguration = this.loadRuntimeConfiguration();
         FileSystemService.ensureDataPathExists();
         this.userConfiguration = this.loadUserConfiguration();
-        this.wallpapersInFolder = this.loadWallpapersFromFolder();
+        this.wallpaperDefinitions = this.loadWallpapersFromFolder();
 
         this.timer = new Timer();
         final Runnable refresh = this::refreshWallpaper;
@@ -124,24 +136,33 @@ public class HoawApplication extends Application {
             }
         }, 500, REFRESH_DELAY_MS);
 
-        this.showWindow();
+        this.openAppWindow();
     }
 
-    public void hideWindow() {
+    public void closeAppWindow() {
+        if (this.appWindow == null) {
+            return;
+        }
+        this.appWindow.close();
+        this.appWindow = null;
     }
 
-    public void showWindow() {
-        System.out.println("showWindow");
-        final Stage newWindow = new Stage();
-        newWindow.setTitle(StaticConfiguration.APP_NAME + " v" + StaticConfiguration.APP_VERSION);
-        newWindow.setScene(new Scene(new MainWindow(this), 600, 600));
-        newWindow.initStyle(StageStyle.DECORATED);
-        newWindow.initModality(Modality.NONE);
-        newWindow.initOwner(this.mainStage);
-        newWindow.setResizable(false);
-        newWindow.getIcons().add(Utils.getLogo());
-        newWindow.show();
-
+    /**
+     * Opens the application window.
+     */
+    public void openAppWindow() {
+        if (this.appWindow != null) {
+            return;
+        }
+        this.appWindow = new Stage();
+        this.appWindow.setTitle(StaticConfiguration.APP_NAME + " v" + StaticConfiguration.APP_VERSION);
+        this.appWindow.setScene(new Scene(new MainWindow(this), 600, 600));
+        this.appWindow.initStyle(StageStyle.DECORATED);
+        this.appWindow.initModality(Modality.NONE);
+        this.appWindow.initOwner(this.mainStage);
+        this.appWindow.setResizable(false);
+        this.appWindow.getIcons().add(Utils.getLogo());
+        this.appWindow.show();
     }
 
     /**
@@ -211,26 +232,28 @@ public class HoawApplication extends Application {
         try {
             manager = DesktopWallpaperManager.create();
             for (final RuntimeConfiguration.Monitor monitor : this.runtimeConfiguration.monitors()) {
-                final String wallpaperFilename = this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
-                if (wallpaperFilename == null) {
+                final String wallpaperIdentifier = this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
+                if (wallpaperIdentifier == null) {
                     // The user has not set a wallpaper for that screen
                     continue;
                 }
 
                 // Find the definition of the given wallpaper
-                final var wallpaper = this.wallpapersInFolder.get(wallpaperFilename);
-                if (wallpaper == null) {
+                final DynamicWallpaperDefinition wallpaperDefinition = this.wallpaperDefinitions.stream()
+                    .filter(definition -> wallpaperIdentifier.equals(definition.identifier()))
+                    .findAny().orElse(null);
+                if (wallpaperDefinition == null) {
                     // Can't find, must delete from choice
                     continue;
                 }
 
-                final int requestedFrame = wallpaper.currentFrame(currentEnv);
+                final int requestedFrame = wallpaperDefinition.currentFrame(currentEnv);
                 final String frameFilename = String.format("%s-%d.jpg",
-                                                           wallpaperFilename.substring(0,
-                                                                                       wallpaperFilename.length() - 5),
+                                                           wallpaperIdentifier.substring(0,
+                                                                                         wallpaperIdentifier.length() - 5),
                                                            requestedFrame);
                 final File wallpaperFile = Path.of(this.userConfiguration.getWallpaperFolderPath())
-                    .resolve(wallpaperFilename)
+                    .resolve(wallpaperIdentifier)
                     .toFile();
                 final String hash = FileSystemService.sha256File(wallpaperFile);
                 final Path framePath = FileSystemService.getDataPath()
@@ -258,8 +281,53 @@ public class HoawApplication extends Application {
         }
     }
 
-    private Map<String, DynamicWallpaperDefinition> loadWallpapersFromFolder() {
-        final List<File> heicFiles;
+    private List<DynamicWallpaperDefinition> loadWallpapersFromFolder() {
+        // First, we load wallpaper definitions from the cache
+
+        // Then, we list the file in the source folder
+        final List<File> wallpaperToExtract =
+            FileSystemService.findHeicFilesInPath(Path.of(this.getUserConfiguration().getWallpaperFolderPath()));
+
+        // We compare and find wallpapers that have not been extracted
+        final List<DynamicWallpaperDefinition> allDefinitions = new ArrayList<>(wallpaperToExtract.size());
+        try {
+            this.metadataExtractor.start();
+            for (final File heicFile : wallpaperToExtract) {
+                final var definitions = this.dynamicWallpaperService.loadDefinitionsFromFile(heicFile);
+
+                final Path cacheDirectory = FileSystemService.getDataPath().resolve(definitions.get(0).fileHash());
+                cacheDirectory.toFile().mkdirs();
+
+                // Extract the wallpaper
+                this.dynamicWallpaperService.extract(heicFile, definitions.get(0).fileHash());
+
+                // Create the thumbnail
+                final BufferedImage previewImage = PreviewGenerator.generate(definitions.get(0));
+                final File previewFile = cacheDirectory.resolve("preview.png").toFile();
+                ImageIO.write(previewImage, "png", previewFile);
+
+                // Put the definition in a cache
+                final var cacheWallpaperDefinition =
+                    CachedWallpaperDefinition.fromDynamicWallpaperDefinition(definitions.get(0));
+                final Path cacheDefinitionFile = cacheDirectory.resolve("definition.json");
+                Files.writeString(cacheDefinitionFile,
+                                  this.gson.toJson(cacheWallpaperDefinition),
+                                  StandardOpenOption.WRITE,
+                                  StandardOpenOption.TRUNCATE_EXISTING,
+                                  StandardOpenOption.CREATE);
+
+                allDefinitions.addAll(definitions);
+            }
+        } catch (final Exception exception) {
+            // Log exception, ignore file :(
+        } finally {
+            this.metadataExtractor.close();
+        }
+        return allDefinitions;
+
+        //
+
+        /*final List<File> heicFiles;
         try {
             heicFiles =
                 FileSystemService.findHeicFilesInPath(Path.of(this.userConfiguration.getWallpaperFolderPath()));
@@ -272,7 +340,8 @@ public class HoawApplication extends Application {
         heicFiles.parallelStream()
             .forEach(heicFile -> {
                 try {
-                    wallpapers.put(heicFile.getName(), this.dynamicWallpaperService.loadDefinitionsFromFile(heicFile));
+                    wallpapers.put(heicFile.getName(),
+                                   this.dynamicWallpaperService.loadDefinitionsFromFile(heicFile).get(0));
                 } catch (final Exception exception) {
 
                 }
@@ -282,7 +351,7 @@ public class HoawApplication extends Application {
         } catch (final Exception exception) {
             // Let's ignore it for now
         }
-        return wallpapers;
+        return wallpapers;*/
     }
 
     private void ensureWallpaperIsExtracted(final String wallpaperFilename) {
@@ -329,22 +398,22 @@ public class HoawApplication extends Application {
         return this.desktopWallpaperManager;
     }
 
-    public Map<String, DynamicWallpaperDefinition> getWallpapersInFolder() {
-        return this.wallpapersInFolder;
+    public List<DynamicWallpaperDefinition> getWallpapersInFolder() {
+        return this.wallpaperDefinitions;
     }
 
     public void setWallpaperFolderPath(final String wallpaperFolderPath) {
         this.userConfiguration.setWallpaperFolderPath(wallpaperFolderPath);
-        this.wallpapersInFolder = this.loadWallpapersFromFolder();
+        this.wallpaperDefinitions = this.loadWallpapersFromFolder();
     }
 
     public void setWallpaperChoice(final String monitorDevicePath,
                                    final String wallpaperFilename) {
         System.out.println("setWallpaperChoice");
-        if (!this.wallpapersInFolder.containsKey(wallpaperFilename)) {
+        /*if (!this.wallpaperDefinitions.containsKey(wallpaperFilename)) {
             LOG.info(() -> "The wallpaper filename '" + wallpaperFilename + "' is not present in the folder");
             return;
-        }
+        }*/
         this.ensureWallpaperIsExtracted(wallpaperFilename);
         this.userConfiguration.getWallpaperChoices().put(monitorDevicePath, wallpaperFilename);
     }

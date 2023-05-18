@@ -55,6 +55,22 @@ public class AppearanceWallpaperDefinition extends DynamicWallpaperDefinition {
         return DynamicWallpaperType.APPEARANCE;
     }
 
+    public short getLightFrameIndex() {
+        return this.lightFrameIndex;
+    }
+
+    public void setLightFrameIndex(final short lightFrameIndex) {
+        this.lightFrameIndex = lightFrameIndex;
+    }
+
+    public short getDarkFrameIndex() {
+        return this.darkFrameIndex;
+    }
+
+    public void setDarkFrameIndex(final short darkFrameIndex) {
+        this.darkFrameIndex = darkFrameIndex;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
@@ -75,7 +91,7 @@ public class AppearanceWallpaperDefinition extends DynamicWallpaperDefinition {
             ", darkFrameIndex=" + darkFrameIndex +
             ", height=" + height +
             ", width=" + width +
-            ", hash='" + hash + '\'' +
+            ", hash='" + fileHash + '\'' +
             ", filename='" + filename + '\'' +
             ", numberOfFrames=" + numberOfFrames +
             '}';
