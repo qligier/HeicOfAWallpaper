@@ -5,6 +5,6 @@ package ch.qligier.heicofawallpaper.model;
  *
  * @author Quentin Ligier
  **/
-public enum DynamicWallpaperType {
-    SOLAR, TIME, APPEARANCE
+public record DynWallSelection(String filename,
+                               DynWallType type) {
 }

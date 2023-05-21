@@ -8,9 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * Every thing related to the file system.
@@ -26,8 +25,9 @@ import java.util.logging.Logger;
  * @author Quentin Ligier
  **/
 public class FileSystemService {
+    public static final String CACHE_DEFINITION_FILE_NAME = "definition.json";
+    public static final String PREVIEW_FILE_NAME = "preview.png";
     private static final Logger LOG = Logger.getLogger("FileSystemService");
-
     private static final String DATA_PATH = "qligier/HeicOfAWallpaper";
     private static final String CONFIGURATION_FILE_NAME = "configuration.json";
     private static final String WALLPAPERS_FOLDER_NAME = "wallpapers";
@@ -53,18 +53,14 @@ public class FileSystemService {
         return getDataPath().resolve(CONFIGURATION_FILE_NAME);
     }
 
-    public static List<File> findHeicFilesInPath(final Path folderPath) {
+    public static Stream<Path> findHeicFilesInPath(final Path folderPath) throws IOException {
         final File folder = folderPath.toFile();
         if (!folder.exists() || !folder.isDirectory()) {
             LOG.info(() -> "findHeicFilesInPath: the path is not a directory: " + folderPath);
-            return Collections.emptyList();
+            return Stream.empty();
         }
-        final var files = folder.listFiles((dir, name) -> name.endsWith(".heic"));
-        if (files != null) {
-            return List.of(files);
-        }
-        LOG.fine("findHeicFilesInPath: listFiles: has returned null");
-        return Collections.emptyList();
+        return Files.list(folderPath)
+            .filter(path -> path.toFile().getName().endsWith(".heic"));
     }
 
     public static String sha256File(final File file) {

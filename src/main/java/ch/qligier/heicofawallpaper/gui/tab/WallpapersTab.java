@@ -3,11 +3,11 @@ package ch.qligier.heicofawallpaper.gui.tab;
 import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
-import ch.qligier.heicofawallpaper.model.AppearanceWallpaperDefinition;
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
-import ch.qligier.heicofawallpaper.model.SolarWallpaperDefinition;
-import ch.qligier.heicofawallpaper.model.TimeWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.DynWallDefinition;
+import ch.qligier.heicofawallpaper.service.FileSystemService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -20,8 +20,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
-import java.io.InputStream;
-import java.util.Objects;
+import java.nio.file.Path;
 import java.util.function.Function;
 
 /**
@@ -53,7 +52,7 @@ public class WallpapersTab extends AbstractContentTab {
 
     @FXML
     @MonotonicNonNull
-    protected ListView<DynamicWallpaperDefinition> wallpaperList;
+    protected ListView<DynWallDefinition> wallpaperList;
 
     protected TypeFilter typeFilter = TypeFilter.ALL;
 
@@ -76,11 +75,17 @@ public class WallpapersTab extends AbstractContentTab {
             this.typeFilter = this.typeChooser.getSelectionModel().getSelectedItem();
             this.onListRefresh();
         });
-        this.wallpaperList.setMouseTransparent(true);
+        //this.wallpaperList.setMouseTransparent(true);
         this.wallpaperList.setFocusTraversable(false);
         this.wallpaperList.setCellFactory(list -> new WallpaperCell());
         this.directoryInput.setText(this.app.getUserConfiguration().getWallpaperFolderPath());
-        this.onListRefresh();
+
+        final Runnable refreshList = this::onListRefresh;
+        this.app.getWallpaperDefinitions().addListener((ListChangeListener<DynWallDefinition>) change -> {
+            Platform.runLater(refreshList);
+        });
+
+        refreshList.run();
     }
 
     @FXML
@@ -98,7 +103,7 @@ public class WallpapersTab extends AbstractContentTab {
 
     @FXML
     protected void onListRefresh() {
-        final var allWallpapers = this.app.getWallpapersInFolder();
+        final var allWallpapers = this.app.getWallpaperDefinitions();
         final var filteredWallpapers = allWallpapers
             .stream()
             .filter(entry -> this.typeFilter.getFilter().apply(entry))
@@ -117,15 +122,15 @@ public class WallpapersTab extends AbstractContentTab {
      */
     private enum TypeFilter {
         ALL("All", wallpaper -> true),
-        SOLAR("Solar", SolarWallpaperDefinition.class::isInstance),
-        TIME("Time", TimeWallpaperDefinition.class::isInstance),
-        APPEARANCE("Appearance", AppearanceWallpaperDefinition.class::isInstance);
+        SOLAR("Solar", DynWallDefinition::isSolar),
+        TIME("Time", DynWallDefinition::isTime),
+        APPEARANCE("Appearance", DynWallDefinition::isAppearance);
 
         private final String display;
-        private final Function<DynamicWallpaperDefinition, Boolean> filter;
+        private final Function<DynWallDefinition, Boolean> filter;
 
         TypeFilter(final String display,
-                   final Function<DynamicWallpaperDefinition, Boolean> filter) {
+                   final Function<DynWallDefinition, Boolean> filter) {
             this.display = display;
             this.filter = filter;
         }
@@ -134,7 +139,7 @@ public class WallpapersTab extends AbstractContentTab {
             return this.display;
         }
 
-        public Function<DynamicWallpaperDefinition, Boolean> getFilter() {
+        public Function<DynWallDefinition, Boolean> getFilter() {
             return this.filter;
         }
 
@@ -144,9 +149,9 @@ public class WallpapersTab extends AbstractContentTab {
         }
     }
 
-    private static class WallpaperCell extends ListCell<DynamicWallpaperDefinition> {
+    private static class WallpaperCell extends ListCell<DynWallDefinition> {
         @Override
-        protected void updateItem(final @Nullable DynamicWallpaperDefinition entry,
+        protected void updateItem(final @Nullable DynWallDefinition entry,
                                   final boolean empty) {
             super.updateItem(entry, empty);
             if (empty || entry == null) {
@@ -154,8 +159,17 @@ public class WallpapersTab extends AbstractContentTab {
                 return;
             }
             final HBox hBox = new HBox();
+            final Path cachePath = FileSystemService.getDataPath().resolve(entry.fileHash());
 
-            final String iconName = switch (entry.type()) {
+            // Display the preview thumbnail
+            final String previewUrl = cachePath.resolve(FileSystemService.PREVIEW_FILE_NAME).toString();
+            final ImageView preview = new ImageView(new Image(previewUrl));
+            preview.setFitWidth(128);
+            preview.setFitHeight(72);
+            hBox.getChildren().add(preview);
+
+            // Wallpaper type
+            /*final String iconName = switch (entry.type()) {
                 case APPEARANCE -> "brush.png";
                 case TIME -> "clock.png";
                 case SOLAR -> "sun.png";
@@ -164,8 +178,9 @@ public class WallpapersTab extends AbstractContentTab {
             final ImageView imageView = new ImageView(new Image(Objects.requireNonNull(is)));
             imageView.setFitHeight(20);
             imageView.setFitWidth(20);
-            hBox.getChildren().add(imageView);
+            hBox.getChildren().add(imageView);*/
 
+            // Wallpaper filename
             hBox.getChildren().add(new Text(entry.filename()));
 
             setGraphic(hBox);

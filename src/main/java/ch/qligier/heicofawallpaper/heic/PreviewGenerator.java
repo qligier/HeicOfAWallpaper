@@ -1,6 +1,6 @@
 package ch.qligier.heicofawallpaper.heic;
 
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 
 import javax.imageio.ImageIO;
@@ -16,18 +16,13 @@ import java.util.logging.Logger;
  * @author Quentin Ligier
  **/
 public class PreviewGenerator {
-    private static final Logger LOG = Logger.getLogger("PreviewGenerator");
 
     /**
      * The preview size in pixels.
      */
-    private static final short WIDTH = 300;
-    private static final short HEIGHT = 200;
-
-    /**
-     * The boundary angle, in degrees.
-     */
-    private static final short BOUNDARY_ANGLE = 70;
+    public static final short WIDTH = 160;
+    public static final short HEIGHT = 90;
+    private static final Logger LOG = Logger.getLogger("PreviewGenerator");
 
     /**
      * The maximum number of frames to show in the preview.
@@ -35,7 +30,7 @@ public class PreviewGenerator {
     private static final short MAX_FRAMES = 6;
 
 
-    public static BufferedImage generate(final DynamicWallpaperDefinition wallpaper) throws IOException {
+    public static BufferedImage generate(final DynWallDefinition wallpaper) throws IOException {
         final Path cacheDirectory = FileSystemService.getDataPath().resolve(wallpaper.fileHash());
 
         // All calcules are made with the original size of the wallpaper. Resizing is done at the end
@@ -93,10 +88,36 @@ public class PreviewGenerator {
         }
 
         // At this point, we cut and resize the full-size preview to the thumbnail size
+        // The aspect ratio may not match, so we need to calculate the right thumbnail dimensions and the cropping to
+        // apply.
+        final short rescaledWidth;
+        final short rescaledHeight;
+        final short rescaledDeltaX;
+        final short rescaledDeltaY;
+        if (wallpaperRatio == previewRatio) {
+            rescaledWidth = WIDTH;
+            rescaledHeight = HEIGHT;
+            rescaledDeltaX = 0;
+            rescaledDeltaY = 0;
+        } else if (wallpaperRatio > previewRatio) {
+            rescaledWidth = (short) Math.round(wallpaperRatio * HEIGHT);
+            rescaledHeight = HEIGHT;
+            rescaledDeltaX = (short) -Math.round((float) (rescaledWidth - WIDTH) / 2);
+            rescaledDeltaY = 0;
+        } else {
+            rescaledWidth = WIDTH;
+            rescaledHeight = (short) Math.round(WIDTH / wallpaperRatio);
+            rescaledDeltaX = 0;
+            rescaledDeltaY = (short) -Math.round((float) (rescaledHeight - HEIGHT) / 2);
+        }
+
+        // The destination image that will be saved
         final BufferedImage thumbnail = new BufferedImage(WIDTH, HEIGHT, preview.getType());
         final Graphics2D graphics = thumbnail.createGraphics();
-        final Image rescaled = preview.getScaledInstance(WIDTH, HEIGHT, Image.SCALE_AREA_AVERAGING);
-        graphics.drawImage(rescaled, 0, 0, null);
+
+        // The rescaled image that we'll paste in the new buffer
+        final Image rescaled = preview.getScaledInstance(rescaledWidth, rescaledHeight, Image.SCALE_AREA_AVERAGING);
+        graphics.drawImage(rescaled, rescaledDeltaX, rescaledDeltaY, null);
         graphics.dispose();
 
         return thumbnail;

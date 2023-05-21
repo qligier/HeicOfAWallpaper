@@ -29,7 +29,7 @@ public class MainWindow extends AnchorPane {
     @FXML
     protected VBox sidebar;
     @FXML
-    protected HBox navWallpapers;
+    protected VBox navWallpapers;
     @FXML
     protected HBox navScreens;
     @FXML

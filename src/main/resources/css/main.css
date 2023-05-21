@@ -4,12 +4,12 @@
 
 #sidebar {
     -fx-background-color: #eee;
+    -fx-border-color: #ddd;
+    -fx-border-width: 0 1px 0 0;
 }
 
 .navItem {
     -fx-cursor: Hand;
-    -fx-border-color: #ddd;
-    -fx-border-width: 0 1px 0 0;
 }
 
 .navItem.active {

@@ -13,7 +13,7 @@
 
 <fx:root prefHeight="600.0" prefWidth="516.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <VBox prefHeight="600.0" prefWidth="516.0">
+        <VBox prefHeight="960.0" prefWidth="680.0">
             <children>
                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="The wallpaper directory:">
                     <VBox.margin>
@@ -22,7 +22,7 @@
                 </Text>
                 <HBox prefHeight="47.0" prefWidth="516.0">
                     <children>
-                        <TextField fx:id="directoryInput" disable="true" prefHeight="25.0" prefWidth="388.0">
+                        <TextField fx:id="directoryInput" disable="true" prefHeight="25.0" prefWidth="527.0">
                             <HBox.margin>
                                 <Insets left="4.0" right="4.0" />
                             </HBox.margin>
@@ -40,7 +40,7 @@
                 </HBox>
                 <HBox prefHeight="43.0" prefWidth="516.0">
                     <children>
-                        <Text fx:id="title" strokeType="OUTSIDE" strokeWidth="0.0" text="Wallpaper" wrappingWidth="397.0">
+                        <Text fx:id="title" strokeType="OUTSIDE" strokeWidth="0.0" text="Wallpaper" wrappingWidth="530.0">
                             <font>
                                 <Font size="22.0" />
                             </font>
@@ -54,7 +54,7 @@
                         <Insets bottom="2.0" left="4.0" right="4.0" top="2.0" />
                     </padding>
                 </HBox>
-                <ListView fx:id="wallpaperList" prefHeight="493.0" prefWidth="516.0" />
+                <ListView fx:id="wallpaperList" prefHeight="850.0" prefWidth="680.0" />
             </children>
         </VBox>
     </children>

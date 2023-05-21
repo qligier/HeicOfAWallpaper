@@ -3,6 +3,7 @@ module ch.qligier.heicofawallpaper {
     requires java.logging;
 
     // JavaFX
+    requires javafx.base;
     requires javafx.controls;
     requires javafx.fxml;
     requires org.controlsfx.controls;

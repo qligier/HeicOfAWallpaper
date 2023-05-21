@@ -7,11 +7,13 @@ import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.heic.PreviewGenerator;
-import ch.qligier.heicofawallpaper.model.CachedWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.CachedDynWallDefinition;
 import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.DynWallDefinition;
+import ch.qligier.heicofawallpaper.model.DynWallSelection;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
+import ch.qligier.heicofawallpaper.service.PhaseEvaluator;
 import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
 import ch.qligier.heicofawallpaper.win32.RegistryManager;
 import com.google.gson.Gson;
@@ -20,6 +22,8 @@ import com.sun.jna.platform.win32.COM.COMUtils;
 import com.sun.jna.platform.win32.Ole32;
 import com.sun.jna.platform.win32.WinNT;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -37,9 +41,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The main Heic Of a Wallpaper application.
@@ -63,41 +71,34 @@ public class HoawApplication extends Application {
      */
     private final DynamicWallpaperService dynamicWallpaperService = new DynamicWallpaperService(this.metadataExtractor);
 
+    @MonotonicNonNull
+    private final ObservableList<DynWallDefinition> wallpaperDefinitions =
+        FXCollections.observableList(new ArrayList<>(8));
     /**
      * The main JavaFX stage. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private Stage mainStage;
-
     /**
      * The application window, if it is opened.
      */
     @Nullable
     private Stage appWindow;
-
     /**
      * The runtime configuration. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private RuntimeConfiguration runtimeConfiguration;
-
     /**
      * The user configuration. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private UserConfiguration userConfiguration;
-
     /**
      * The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private DesktopWallpaperManager desktopWallpaperManager;
-
-    @MonotonicNonNull
-    private List<DynamicWallpaperDefinition> wallpaperDefinitions;
-
-    @MonotonicNonNull
-    private Timer timer;
 
     /**
      * Entry point for the CLI.
@@ -125,11 +126,12 @@ public class HoawApplication extends Application {
         this.runtimeConfiguration = this.loadRuntimeConfiguration();
         FileSystemService.ensureDataPathExists();
         this.userConfiguration = this.loadUserConfiguration();
-        this.wallpaperDefinitions = this.loadWallpapersFromFolder();
 
-        this.timer = new Timer();
+        new Thread(this::loadWallpapersFromFolder).start();
+
+        final Timer timer = new Timer();
         final Runnable refresh = this::refreshWallpaper;
-        this.timer.schedule(new TimerTask() {
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 refresh.run();
@@ -156,7 +158,7 @@ public class HoawApplication extends Application {
         }
         this.appWindow = new Stage();
         this.appWindow.setTitle(StaticConfiguration.APP_NAME + " v" + StaticConfiguration.APP_VERSION);
-        this.appWindow.setScene(new Scene(new MainWindow(this), 600, 600));
+        this.appWindow.setScene(new Scene(new MainWindow(this), 840, 960));
         this.appWindow.initStyle(StageStyle.DECORATED);
         this.appWindow.initModality(Modality.NONE);
         this.appWindow.initOwner(this.mainStage);
@@ -219,11 +221,12 @@ public class HoawApplication extends Application {
         this.runtimeConfiguration = this.loadRuntimeConfiguration();
 
         final CurrentEnvironment currentEnv = new CurrentEnvironment(
-            Instant.now(),
+            LocalTime.from(Instant.now().atZone(ZoneId.systemDefault())),
             RegistryManager.isLightThemeEnabled(),
             null,
             null
         );
+        final PhaseEvaluator evaluator = new PhaseEvaluator(currentEnv);
 
         // Create an instance to bind the COM channel to the current thread
         final WinNT.HRESULT result = Ole32.INSTANCE.CoInitializeEx(Pointer.NULL, Ole32.COINIT_MULTITHREADED);
@@ -232,28 +235,42 @@ public class HoawApplication extends Application {
         try {
             manager = DesktopWallpaperManager.create();
             for (final RuntimeConfiguration.Monitor monitor : this.runtimeConfiguration.monitors()) {
-                final String wallpaperIdentifier = this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
-                if (wallpaperIdentifier == null) {
+                final DynWallSelection selection =
+                    this.userConfiguration.getWallpaperChoices().get(monitor.devicePath());
+                if (selection == null) {
                     // The user has not set a wallpaper for that screen
                     continue;
                 }
 
                 // Find the definition of the given wallpaper
-                final DynamicWallpaperDefinition wallpaperDefinition = this.wallpaperDefinitions.stream()
-                    .filter(definition -> wallpaperIdentifier.equals(definition.identifier()))
+                final DynWallDefinition definition = this.wallpaperDefinitions.stream()
+                    .filter(otherDefinition -> selection.filename().equals(otherDefinition.filename()))
                     .findAny().orElse(null);
-                if (wallpaperDefinition == null) {
+                if (definition == null) {
                     // Can't find, must delete from choice
                     continue;
                 }
+                final String fileHash = definition.fileHash();
 
-                final int requestedFrame = wallpaperDefinition.currentFrame(currentEnv);
+                final int requestedFrame = switch (selection.type()) {
+                    case APPEARANCE -> {
+                        assert definition.appearancePhase() != null;
+                        yield evaluator.evaluateAppearanceFrame(definition.appearancePhase());
+                    }
+                    case SOLAR -> {
+                        assert definition.solarPhases() != null;
+                        yield evaluator.evaluateSolarFrame(definition.solarPhases());
+                    }
+                    case TIME -> {
+                        assert definition.timePhases() != null;
+                        yield evaluator.evaluateTimeFrame(definition.timePhases());
+                    }
+                };
                 final String frameFilename = String.format("%s-%d.jpg",
-                                                           wallpaperIdentifier.substring(0,
-                                                                                         wallpaperIdentifier.length() - 5),
+                                                           fileHash.substring(0, fileHash.length() - 5),
                                                            requestedFrame);
                 final File wallpaperFile = Path.of(this.userConfiguration.getWallpaperFolderPath())
-                    .resolve(wallpaperIdentifier)
+                    .resolve(fileHash)
                     .toFile();
                 final String hash = FileSystemService.sha256File(wallpaperFile);
                 final Path framePath = FileSystemService.getDataPath()
@@ -281,34 +298,70 @@ public class HoawApplication extends Application {
         }
     }
 
-    private List<DynamicWallpaperDefinition> loadWallpapersFromFolder() {
+    private void loadWallpapersFromFolder() {
         // First, we load wallpaper definitions from the cache
+        final List<DynWallDefinition> allDefinitions = new ArrayList<>(8);
+        try (final Stream<Path> stream = Files.list(FileSystemService.getDataPath())) {
+            stream.parallel()
+                .filter(path -> path.toFile().isDirectory())
+                .filter(path -> path.resolve(FileSystemService.CACHE_DEFINITION_FILE_NAME).toFile().isFile())
+                .map(path -> {
+                    try {
+                        final String hash = path.toFile().getName();
+                        final String content = Files.readString(path.resolve(FileSystemService.CACHE_DEFINITION_FILE_NAME),
+                                                                StandardCharsets.UTF_8);
+                        final CachedDynWallDefinition cached = this.gson.fromJson(content,
+                                                                                  CachedDynWallDefinition.class);
+                        return cached.toDynamicWallpaperDefinition(hash);
+                    } catch (final Exception exception) {
+                        LOG.warning(exception.toString());
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .forEach(definition -> {
+                    allDefinitions.add(definition);
+                    this.addWallpaperDefinition(definition);
+                });
+        } catch (final IOException exception) {
+            // Log
+        }
+        final Set<String> cachedFilenames = allDefinitions.parallelStream()
+            .map(DynWallDefinition::filename)
+            .collect(Collectors.toSet());
 
         // Then, we list the file in the source folder
-        final List<File> wallpaperToExtract =
-            FileSystemService.findHeicFilesInPath(Path.of(this.getUserConfiguration().getWallpaperFolderPath()));
+        final List<File> wallpaperToExtract = new ArrayList<>(8);
+        try (final var stream = FileSystemService.findHeicFilesInPath(Path.of(this.getUserConfiguration().getWallpaperFolderPath()))) {
+            stream.parallel()
+                .map(Path::toFile)
+                .filter(file -> !cachedFilenames.contains(file.getName()))
+                .forEach(wallpaperToExtract::add);
+        } catch (final IOException exception) {
+            // Log
+        }
 
         // We compare and find wallpapers that have not been extracted
-        final List<DynamicWallpaperDefinition> allDefinitions = new ArrayList<>(wallpaperToExtract.size());
         try {
             this.metadataExtractor.start();
+            // TODO: parallel
             for (final File heicFile : wallpaperToExtract) {
-                final var definitions = this.dynamicWallpaperService.loadDefinitionsFromFile(heicFile);
+                final var definition = this.dynamicWallpaperService.loadDefinitionFromFile(heicFile);
 
-                final Path cacheDirectory = FileSystemService.getDataPath().resolve(definitions.get(0).fileHash());
+                final Path cacheDirectory = FileSystemService.getDataPath().resolve(definition.fileHash());
                 cacheDirectory.toFile().mkdirs();
 
                 // Extract the wallpaper
-                this.dynamicWallpaperService.extract(heicFile, definitions.get(0).fileHash());
+                this.dynamicWallpaperService.extract(heicFile, definition.fileHash());
 
                 // Create the thumbnail
-                final BufferedImage previewImage = PreviewGenerator.generate(definitions.get(0));
+                final BufferedImage previewImage = PreviewGenerator.generate(definition);
                 final File previewFile = cacheDirectory.resolve("preview.png").toFile();
                 ImageIO.write(previewImage, "png", previewFile);
 
                 // Put the definition in a cache
                 final var cacheWallpaperDefinition =
-                    CachedWallpaperDefinition.fromDynamicWallpaperDefinition(definitions.get(0));
+                    CachedDynWallDefinition.fromDynamicWallpaperDefinition(definition);
                 final Path cacheDefinitionFile = cacheDirectory.resolve("definition.json");
                 Files.writeString(cacheDefinitionFile,
                                   this.gson.toJson(cacheWallpaperDefinition),
@@ -316,42 +369,13 @@ public class HoawApplication extends Application {
                                   StandardOpenOption.TRUNCATE_EXISTING,
                                   StandardOpenOption.CREATE);
 
-                allDefinitions.addAll(definitions);
+                this.addWallpaperDefinition(definition);
             }
         } catch (final Exception exception) {
-            // Log exception, ignore file :(
+            LOG.warning(exception.toString());
         } finally {
             this.metadataExtractor.close();
         }
-        return allDefinitions;
-
-        //
-
-        /*final List<File> heicFiles;
-        try {
-            heicFiles =
-                FileSystemService.findHeicFilesInPath(Path.of(this.userConfiguration.getWallpaperFolderPath()));
-        } catch (final Exception exception) {
-            return Collections.emptyMap();
-        }
-
-        final Map<String, DynamicWallpaperDefinition> wallpapers = new HashMap<>(heicFiles.size());
-        this.metadataExtractor.start();
-        heicFiles.parallelStream()
-            .forEach(heicFile -> {
-                try {
-                    wallpapers.put(heicFile.getName(),
-                                   this.dynamicWallpaperService.loadDefinitionsFromFile(heicFile).get(0));
-                } catch (final Exception exception) {
-
-                }
-            });
-        try {
-            this.metadataExtractor.close();
-        } catch (final Exception exception) {
-            // Let's ignore it for now
-        }
-        return wallpapers;*/
     }
 
     private void ensureWallpaperIsExtracted(final String wallpaperFilename) {
@@ -398,23 +422,27 @@ public class HoawApplication extends Application {
         return this.desktopWallpaperManager;
     }
 
-    public List<DynamicWallpaperDefinition> getWallpapersInFolder() {
+    public ObservableList<DynWallDefinition> getWallpaperDefinitions() {
         return this.wallpaperDefinitions;
     }
 
     public void setWallpaperFolderPath(final String wallpaperFolderPath) {
         this.userConfiguration.setWallpaperFolderPath(wallpaperFolderPath);
-        this.wallpaperDefinitions = this.loadWallpapersFromFolder();
+        this.loadWallpapersFromFolder();
     }
 
     public void setWallpaperChoice(final String monitorDevicePath,
-                                   final String wallpaperFilename) {
+                                   final DynWallSelection selection) {
         System.out.println("setWallpaperChoice");
         /*if (!this.wallpaperDefinitions.containsKey(wallpaperFilename)) {
             LOG.info(() -> "The wallpaper filename '" + wallpaperFilename + "' is not present in the folder");
             return;
         }*/
-        this.ensureWallpaperIsExtracted(wallpaperFilename);
-        this.userConfiguration.getWallpaperChoices().put(monitorDevicePath, wallpaperFilename);
+        this.ensureWallpaperIsExtracted(selection.filename());
+        this.userConfiguration.getWallpaperChoices().put(monitorDevicePath, selection);
+    }
+
+    public synchronized void addWallpaperDefinition(final DynWallDefinition definition) {
+        this.wallpaperDefinitions.add(definition);
     }
 }

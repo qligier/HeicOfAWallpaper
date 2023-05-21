@@ -1,10 +1,13 @@
 package ch.qligier.heicofawallpaper.service;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
-import ch.qligier.heicofawallpaper.heic.BplistReader;
+import ch.qligier.heicofawallpaper.heic.BplistParser;
 import ch.qligier.heicofawallpaper.heic.CustomTag;
 import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
-import ch.qligier.heicofawallpaper.model.DynamicWallpaperDefinition;
+import ch.qligier.heicofawallpaper.model.DynWallDefinition;
+import ch.qligier.heicofawallpaper.model.PhaseAppearance;
+import ch.qligier.heicofawallpaper.model.PhaseSolar;
+import ch.qligier.heicofawallpaper.model.PhaseTime;
 import com.dd.plist.PropertyListFormatException;
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
@@ -27,8 +30,6 @@ import java.util.function.Consumer;
 public class DynamicWallpaperService {
 
     private final MetadataExtractor metadataExtractor;
-
-    private final BplistReader bplistReader = new BplistReader();
 
     public DynamicWallpaperService(final MetadataExtractor metadataExtractor) {
         this.metadataExtractor = Objects.requireNonNull(metadataExtractor);
@@ -60,12 +61,12 @@ public class DynamicWallpaperService {
     }
 
     /**
-     * This method loads the definition(s) of a dynamic wallpaper from its cached content.
+     * This method loads the definition of a dynamic wallpaper from its cached content.
      *
      * @param wallpaperCachePath
      * @return
      */
-    public List<DynamicWallpaperDefinition> loadDefinitionsFromCache(final Path wallpaperCachePath) throws IOException {
+    public DynWallDefinition loadDefinitionFromCache(final Path wallpaperCachePath) throws IOException {
 
         /*return Files.list(wallpaperCachePath)
             .filter(path -> path.toFile().isDirectory())
@@ -76,9 +77,9 @@ public class DynamicWallpaperService {
     }
 
     /**
-     * This method loads the definition(s) of a dynamic wallpaper from its original HEIC file. It is slow and should be
+     * This method loads the definition of a dynamic wallpaper from its original HEIC file. It is slow and should be
      * done the first time only. Afterwards, definitions should be loaded from the created cache (see
-     * {@link #loadDefinitionsFromCache(Path)}.
+     * {@link #loadDefinitionFromCache(Path)}.
      *
      * @param dynamicWallpaperFile
      * @return
@@ -90,7 +91,7 @@ public class DynamicWallpaperService {
      * @throws SAXException
      * @implSpec The caller must ensure the {@code metadataExtractor} has been started and will be closed.
      */
-    public List<DynamicWallpaperDefinition> loadDefinitionsFromFile(final File dynamicWallpaperFile) throws Exception {
+    public DynWallDefinition loadDefinitionFromFile(final File dynamicWallpaperFile) throws Exception {
         assert this.metadataExtractor.isStarted();
         final Map<Tag, String> metadata = this.metadataExtractor.getMetadata(dynamicWallpaperFile);
 
@@ -119,30 +120,31 @@ public class DynamicWallpaperService {
             numberOfFrames = 0;
         }
 
-        final List<DynamicWallpaperDefinition> definitions;
+        List<PhaseSolar> solarPhases = null;
+        List<PhaseTime> timePhases = null;
         final String bplist;
         if (metadata.containsKey(CustomTag.XMP_SOLAR)) {
             bplist = metadata.get(CustomTag.XMP_SOLAR);
-            definitions = BplistReader.parseSolarBplist(bplist, numberOfFrames);
+            solarPhases = BplistParser.parseSolarBplist(bplist, numberOfFrames);
         } else if (metadata.containsKey(CustomTag.XMP_H24)) {
             bplist = metadata.get(CustomTag.XMP_H24);
-            definitions = BplistReader.parseTimeBplist(bplist, numberOfFrames);
+            timePhases = BplistParser.parseTimeBplist(bplist, numberOfFrames);
         } else if (metadata.containsKey(CustomTag.XMP_APR)) {
             bplist = metadata.get(CustomTag.XMP_APR);
-            definitions = List.of(BplistReader.parseAppearanceBplist(bplist, numberOfFrames));
         } else {
             throw new InvalidDynamicWallpaperException("The dynamic wallpaper has no Solar, H24 or Apr metadata");
         }
+        final PhaseAppearance appearancePhase = BplistParser.parseAppearanceBplist(bplist, numberOfFrames);
 
-        for (final var definition : definitions) {
-            definition.setWidth(width);
-            definition.setHeight(height);
-            definition.setFilename(dynamicWallpaperFile.getName());
-            definition.setHash(FileSystemService.sha256File(dynamicWallpaperFile));
-            definition.setNumberOfFrames(numberOfFrames);
-            definition.setBplist(bplist);
-        }
-        return definitions;
+        return new DynWallDefinition(height,
+                                     width,
+                                     dynamicWallpaperFile.getName(),
+                                     FileSystemService.sha256File(dynamicWallpaperFile),
+                                     bplist,
+                                     numberOfFrames,
+                                     appearancePhase,
+                                     solarPhases,
+                                     timePhases);
     }
 
     /**

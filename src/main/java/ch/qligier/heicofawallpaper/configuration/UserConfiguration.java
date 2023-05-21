@@ -1,5 +1,7 @@
 package ch.qligier.heicofawallpaper.configuration;
 
+import ch.qligier.heicofawallpaper.model.DynWallSelection;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -14,8 +16,8 @@ public class UserConfiguration {
      * The choices of dynamic wallpapers made by the user. The key is the monitor devicePath, the value is the wallpaper
      * filename.
      */
-    private final Map<String, String> wallpaperChoices;
-    
+    private final Map<String, DynWallSelection> wallpaperChoices;
+
     /**
      *
      */
@@ -27,7 +29,7 @@ public class UserConfiguration {
      * @param wallpaperChoices The choices of dynamic wallpapers made by the user.
      */
     public UserConfiguration(final String wallpaperFolderPath,
-                             final Map<String, String> wallpaperChoices) {
+                             final Map<String, DynWallSelection> wallpaperChoices) {
         this.wallpaperFolderPath = Objects.requireNonNull(wallpaperFolderPath);
         this.wallpaperChoices = Objects.requireNonNull(wallpaperChoices);
     }
@@ -40,7 +42,7 @@ public class UserConfiguration {
         this.wallpaperFolderPath = wallpaperFolderPath;
     }
 
-    public Map<String, String> getWallpaperChoices() {
+    public Map<String, DynWallSelection> getWallpaperChoices() {
         return this.wallpaperChoices;
     }
 }
