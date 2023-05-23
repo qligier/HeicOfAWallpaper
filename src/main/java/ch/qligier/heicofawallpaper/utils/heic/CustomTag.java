@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.heic;
+package ch.qligier.heicofawallpaper.utils.heic;
 
 import com.thebuzzmedia.exiftool.Tag;
 

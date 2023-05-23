@@ -3,4 +3,4 @@
  *
  * @author Quentin Ligier
  **/
-package ch.qligier.heicofawallpaper.heic;
+package ch.qligier.heicofawallpaper.utils.heic;

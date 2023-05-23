@@ -20,15 +20,16 @@ module ch.qligier.heicofawallpaper {
     requires com.github.mjeanroy.exiftool;
     requires org.checkerframework.checker.qual;
     requires com.google.gson;
+    requires eventbus.java;
 
     exports ch.qligier.heicofawallpaper;
     exports ch.qligier.heicofawallpaper.configuration;
     exports ch.qligier.heicofawallpaper.exception;
-    exports ch.qligier.heicofawallpaper.heic;
+    exports ch.qligier.heicofawallpaper.utils.heic;
     exports ch.qligier.heicofawallpaper.model;
     exports ch.qligier.heicofawallpaper.service;
-    exports ch.qligier.heicofawallpaper.win32;
+    exports ch.qligier.heicofawallpaper.utils.win32;
     opens ch.qligier.heicofawallpaper.gui to javafx.fxml;
-    opens ch.qligier.heicofawallpaper.gui.tab to javafx.fxml;
+    opens ch.qligier.heicofawallpaper.gui.tab to javafx.fxml, eventbus.java;
     opens ch.qligier.heicofawallpaper.model to com.google.gson;
 }

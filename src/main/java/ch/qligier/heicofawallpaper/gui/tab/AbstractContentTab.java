@@ -24,4 +24,7 @@ public abstract class AbstractContentTab extends AnchorPane {
     public HoawApplication getApp() {
         return this.app;
     }
+
+    public void close() {
+    }
 }

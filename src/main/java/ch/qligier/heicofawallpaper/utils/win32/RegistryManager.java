@@ -1,10 +1,7 @@
-package ch.qligier.heicofawallpaper.win32;
+package ch.qligier.heicofawallpaper.utils.win32;
 
-import ch.qligier.heicofawallpaper.Utils;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
-
-import java.util.Arrays;
 
 /**
  * The Java manager for the Windows Registry.

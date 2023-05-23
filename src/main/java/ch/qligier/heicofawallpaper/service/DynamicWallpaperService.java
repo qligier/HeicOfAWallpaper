@@ -1,20 +1,20 @@
 package ch.qligier.heicofawallpaper.service;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
-import ch.qligier.heicofawallpaper.heic.BplistParser;
-import ch.qligier.heicofawallpaper.heic.CustomTag;
-import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
-import ch.qligier.heicofawallpaper.model.DynWallDefinition;
-import ch.qligier.heicofawallpaper.model.PhaseAppearance;
-import ch.qligier.heicofawallpaper.model.PhaseSolar;
-import ch.qligier.heicofawallpaper.model.PhaseTime;
+import ch.qligier.heicofawallpaper.model.*;
+import ch.qligier.heicofawallpaper.utils.heic.BplistParser;
+import ch.qligier.heicofawallpaper.utils.heic.CustomTag;
+import ch.qligier.heicofawallpaper.utils.heic.MetadataExtractor;
 import com.dd.plist.PropertyListFormatException;
+import com.google.gson.Gson;
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -23,11 +23,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 /**
  * @author Quentin Ligier
  */
 public class DynamicWallpaperService {
+    private static final Logger LOG = Logger.getLogger("DynamicWallpaperService");
 
     private final MetadataExtractor metadataExtractor;
 
@@ -64,22 +66,38 @@ public class DynamicWallpaperService {
      * This method loads the definition of a dynamic wallpaper from its cached content.
      *
      * @param wallpaperCachePath
+     * @param gson
      * @return
      */
-    public DynWallDefinition loadDefinitionFromCache(final Path wallpaperCachePath) throws IOException {
+    @Nullable
+    public DynWallDefinition loadDefinitionFromCache(final Path wallpaperCachePath,
+                                                     final Gson gson) throws IOException {
 
-        /*return Files.list(wallpaperCachePath)
-            .filter(path -> path.toFile().isDirectory())
-            .map(path -> path.resolve("cache.json"))
-            .filter(path -> path.toFile().isFile())
-            .;*/
-        return null;
+        final String hash = wallpaperCachePath.toFile().getName();
+        final Path cachePath = wallpaperCachePath.resolve(FileSystemService.CACHE_DEFINITION_FILE_NAME);
+        if (!cachePath.toFile().isFile()) {
+            LOG.warning(() -> "Cache definition file is missing: " + cachePath);
+            return null;
+        }
+        if (!Files.isReadable(cachePath)) {
+            LOG.warning(() -> "Cache definition file is not readable: " + cachePath);
+            return null;
+        }
+        final String content;
+        try {
+            content = Files.readString(cachePath);
+        } catch (final IOException e) {
+            LOG.warning(e.getMessage());
+            return null;
+        }
+        final CachedDynWallDefinition cachedDefinition = gson.fromJson(content, CachedDynWallDefinition.class);
+        return cachedDefinition.toDynamicWallpaperDefinition(hash);
     }
 
     /**
      * This method loads the definition of a dynamic wallpaper from its original HEIC file. It is slow and should be
      * done the first time only. Afterwards, definitions should be loaded from the created cache (see
-     * {@link #loadDefinitionFromCache(Path)}.
+     * {@link #loadDefinitionFromCache(Path, Gson)}.
      *
      * @param dynamicWallpaperFile
      * @return
@@ -138,8 +156,8 @@ public class DynamicWallpaperService {
 
         return new DynWallDefinition(height,
                                      width,
-                                     dynamicWallpaperFile.getName(),
                                      FileSystemService.sha256File(dynamicWallpaperFile),
+                                     dynamicWallpaperFile.getName(),
                                      bplist,
                                      numberOfFrames,
                                      appearancePhase,

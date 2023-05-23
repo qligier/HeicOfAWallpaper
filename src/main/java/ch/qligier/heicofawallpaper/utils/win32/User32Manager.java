@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.win32;
+package ch.qligier.heicofawallpaper.utils.win32;
 
 import com.sun.jna.platform.win32.*;
 import org.checkerframework.checker.nullness.qual.Nullable;

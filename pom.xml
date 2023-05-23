@@ -87,6 +87,13 @@
             <version>2.10.1</version>
         </dependency>
 
+        <!-- Event bus for Java that simplifies communication between Threads -->
+        <dependency>
+            <groupId>org.greenrobot</groupId>
+            <artifactId>eventbus-java</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+
         <!-- The Checker Framework enhances Java's type system to make it more powerful and useful -->
         <dependency>
             <groupId>org.checkerframework</groupId>

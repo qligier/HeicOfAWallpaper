@@ -4,10 +4,10 @@ import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
+import ch.qligier.heicofawallpaper.model.events.WallpaperDefinitionsChanged;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -18,42 +18,69 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 /**
  * The 'wallpapers' tab controller.
  *
  * @author Quentin Ligier
  **/
+@SuppressWarnings("java:S110")
 public class WallpapersTab extends AbstractContentTab {
+    private static final Logger LOG = Logger.getLogger("WallpapersTab");
 
+    /**
+     * The input field to select the wallpaper directory. Read-only display.
+     */
     @FXML
     @MonotonicNonNull
     protected TextField directoryInput;
 
+    /**
+     * The button to open the wallpaper directory selection dialog.
+     */
     @FXML
     @MonotonicNonNull
     protected Button selectButton;
 
+    /**
+     * The button to refresh the wallpaper definitions in the directory.
+     */
     @FXML
     @MonotonicNonNull
     protected Button refreshButton;
 
+    /**
+     * The list title.
+     */
     @FXML
     @MonotonicNonNull
     protected Text title;
 
+    /**
+     * The select input to filter wallpapers by their type.
+     */
     @FXML
     @MonotonicNonNull
     protected ChoiceBox<TypeFilter> typeChooser;
 
+    /**
+     * The GUI list of wallpaper definitions. See {@link WallpaperCell} for the rendering of each item.
+     */
     @FXML
     @MonotonicNonNull
     protected ListView<DynWallDefinition> wallpaperList;
 
+    /**
+     * The type filter currently selected.
+     */
     protected TypeFilter typeFilter = TypeFilter.ALL;
 
     public WallpapersTab(final HoawApplication app,
@@ -69,6 +96,10 @@ public class WallpapersTab extends AbstractContentTab {
             return;
         }
 
+        // Register this class for some events
+        EventBus.getDefault().register(this);
+
+        // GUI configuration
         this.typeChooser.getItems().addAll(TypeFilter.values());
         this.typeChooser.setValue(TypeFilter.ALL);
         this.typeChooser.setOnAction(event -> {
@@ -80,12 +111,7 @@ public class WallpapersTab extends AbstractContentTab {
         this.wallpaperList.setCellFactory(list -> new WallpaperCell());
         this.directoryInput.setText(this.app.getUserConfiguration().getWallpaperFolderPath());
 
-        final Runnable refreshList = this::onListRefresh;
-        this.app.getWallpaperDefinitions().addListener((ListChangeListener<DynWallDefinition>) change -> {
-            Platform.runLater(refreshList);
-        });
-
-        refreshList.run();
+        this.onListRefresh();
     }
 
     @FXML
@@ -115,6 +141,17 @@ public class WallpapersTab extends AbstractContentTab {
         } else {
             this.title.setText(filteredWallpapers.size() + " wallpapers (out of " + allWallpapers.size() + ")");
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    public void onMessageEvent(final WallpaperDefinitionsChanged event) {
+        LOG.fine("onMessageEvent WallpaperDefinitionsChanged");
+        Platform.runLater(this::onListRefresh);
+    }
+
+    @Override
+    public void close() {
+        EventBus.getDefault().unregister(this);
     }
 
     /**

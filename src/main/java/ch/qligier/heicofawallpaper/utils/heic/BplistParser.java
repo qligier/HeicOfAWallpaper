@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.heic;
+package ch.qligier.heicofawallpaper.utils.heic;
 
 import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
 import ch.qligier.heicofawallpaper.model.PhaseAppearance;

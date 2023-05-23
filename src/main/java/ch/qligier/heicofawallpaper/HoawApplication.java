@@ -5,18 +5,21 @@ import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
 import ch.qligier.heicofawallpaper.configuration.UserConfiguration;
 import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.gui.TrayIconManager;
-import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
-import ch.qligier.heicofawallpaper.heic.PreviewGenerator;
 import ch.qligier.heicofawallpaper.model.CachedDynWallDefinition;
 import ch.qligier.heicofawallpaper.model.CurrentEnvironment;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.model.DynWallSelection;
+import ch.qligier.heicofawallpaper.model.events.WallpaperDefinitionsChanged;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 import ch.qligier.heicofawallpaper.service.PhaseEvaluator;
-import ch.qligier.heicofawallpaper.win32.DesktopWallpaperManager;
-import ch.qligier.heicofawallpaper.win32.RegistryManager;
+import ch.qligier.heicofawallpaper.utils.LocalTimeAdapter;
+import ch.qligier.heicofawallpaper.utils.heic.MetadataExtractor;
+import ch.qligier.heicofawallpaper.utils.heic.PreviewGenerator;
+import ch.qligier.heicofawallpaper.utils.win32.DesktopWallpaperManager;
+import ch.qligier.heicofawallpaper.utils.win32.RegistryManager;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.COM.COMUtils;
 import com.sun.jna.platform.win32.Ole32;
@@ -30,6 +33,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.greenrobot.eventbus.EventBus;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -59,7 +63,12 @@ public class HoawApplication extends Application {
 
     private static final int REFRESH_DELAY_MS = 1000 * 60;
 
-    private final Gson gson = new Gson();
+    /**
+     *
+     */
+    private final Gson gson = new GsonBuilder()
+        .registerTypeAdapter(LocalTime.class, new LocalTimeAdapter())
+        .create();
 
     /**
      *
@@ -315,6 +324,7 @@ public class HoawApplication extends Application {
                         return cached.toDynamicWallpaperDefinition(hash);
                     } catch (final Exception exception) {
                         LOG.warning(exception.toString());
+                        exception.printStackTrace(System.out);
                         return null;
                     }
                 })
@@ -324,7 +334,8 @@ public class HoawApplication extends Application {
                     this.addWallpaperDefinition(definition);
                 });
         } catch (final IOException exception) {
-            // Log
+            LOG.warning(exception.toString());
+            exception.printStackTrace(System.out);
         }
         final Set<String> cachedFilenames = allDefinitions.parallelStream()
             .map(DynWallDefinition::filename)
@@ -338,7 +349,8 @@ public class HoawApplication extends Application {
                 .filter(file -> !cachedFilenames.contains(file.getName()))
                 .forEach(wallpaperToExtract::add);
         } catch (final IOException exception) {
-            // Log
+            LOG.warning(exception.toString());
+            exception.printStackTrace(System.out);
         }
 
         // We compare and find wallpapers that have not been extracted
@@ -373,6 +385,7 @@ public class HoawApplication extends Application {
             }
         } catch (final Exception exception) {
             LOG.warning(exception.toString());
+            exception.printStackTrace(System.out);
         } finally {
             this.metadataExtractor.close();
         }
@@ -444,5 +457,6 @@ public class HoawApplication extends Application {
 
     public synchronized void addWallpaperDefinition(final DynWallDefinition definition) {
         this.wallpaperDefinitions.add(definition);
+        EventBus.getDefault().post(new WallpaperDefinitionsChanged());
     }
 }

@@ -1,6 +1,6 @@
 package ch.qligier.heicofawallpaper.service;
 
-import ch.qligier.heicofawallpaper.win32.Shell32Manager;
+import ch.qligier.heicofawallpaper.utils.win32.Shell32Manager;
 
 import java.io.File;
 import java.io.IOException;

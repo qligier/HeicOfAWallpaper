@@ -6,4 +6,4 @@
  *
  * @author Quentin Ligier
  **/
-package ch.qligier.heicofawallpaper.win32;
+package ch.qligier.heicofawallpaper.utils.win32;

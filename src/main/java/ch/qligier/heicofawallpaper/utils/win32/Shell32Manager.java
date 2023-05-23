@@ -1,4 +1,4 @@
-package ch.qligier.heicofawallpaper.win32;
+package ch.qligier.heicofawallpaper.utils.win32;
 
 import com.sun.jna.platform.win32.COM.COMUtils;
 import com.sun.jna.platform.win32.*;

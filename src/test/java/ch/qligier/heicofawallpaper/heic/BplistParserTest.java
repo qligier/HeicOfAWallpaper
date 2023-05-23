@@ -4,6 +4,7 @@ import ch.qligier.heicofawallpaper.exception.InvalidDynamicWallpaperException;
 import ch.qligier.heicofawallpaper.model.PhaseAppearance;
 import ch.qligier.heicofawallpaper.model.PhaseSolar;
 import ch.qligier.heicofawallpaper.model.PhaseTime;
+import ch.qligier.heicofawallpaper.utils.heic.BplistParser;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalTime;

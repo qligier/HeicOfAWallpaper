@@ -84,6 +84,11 @@ public class MainWindow extends AnchorPane {
             return;
         }
         this.openPage = page;
+        final Node oldCenterNode = this.contentPane.getCenter();
+        if (oldCenterNode instanceof final AbstractContentTab oldContentTab) {
+            // Properly destroy the old content tab
+            oldContentTab.close();
+        }
         this.contentPane.setCenter(this.openPage.getSupplier().apply(this.app, this));
 
         // Update the menu style

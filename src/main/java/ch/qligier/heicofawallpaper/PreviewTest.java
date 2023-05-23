@@ -1,10 +1,10 @@
 package ch.qligier.heicofawallpaper;
 
-import ch.qligier.heicofawallpaper.heic.MetadataExtractor;
-import ch.qligier.heicofawallpaper.heic.PreviewGenerator;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
+import ch.qligier.heicofawallpaper.utils.heic.MetadataExtractor;
+import ch.qligier.heicofawallpaper.utils.heic.PreviewGenerator;
 
 import java.io.File;
 
