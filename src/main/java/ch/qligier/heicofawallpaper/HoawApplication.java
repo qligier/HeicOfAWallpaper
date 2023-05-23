@@ -64,7 +64,7 @@ public class HoawApplication extends Application {
     private static final int REFRESH_DELAY_MS = 1000 * 60;
 
     /**
-     *
+     * A JSON de/serializer.
      */
     private final Gson gson = new GsonBuilder()
         .registerTypeAdapter(LocalTime.class, new LocalTimeAdapter())
@@ -129,6 +129,15 @@ public class HoawApplication extends Application {
     @Override
     public void start(final Stage stage) {
         this.mainStage = stage;
+
+        EventBus.builder()
+            .logNoSubscriberMessages(false)
+            .sendNoSubscriberEvent(false)
+            .logSubscriberExceptions(true)
+            .throwSubscriberException(false)
+            .installDefaultEventBus();
+
+        // Install a Windows try icon
         new TrayIconManager(this.mainStage, this);
 
         this.desktopWallpaperManager = DesktopWallpaperManager.create();
@@ -200,11 +209,10 @@ public class HoawApplication extends Application {
      * Loads the user configuration from disk and returns it.
      */
     private UserConfiguration loadUserConfiguration() {
-        final Gson gson = new Gson();
         try {
             final String serialized = Files.readString(FileSystemService.getUserConfigurationPath(),
                                                        StandardCharsets.UTF_8);
-            return gson.fromJson(serialized, UserConfiguration.class);
+            return this.gson.fromJson(serialized, UserConfiguration.class);
         } catch (final IOException exception) {
             return new UserConfiguration("D:\\Programmation\\Java\\HeicOfAWallpaper\\src\\main\\resources\\heic",
                                          //Shell32Manager.getUserPicturesPath().toString(),
@@ -216,8 +224,7 @@ public class HoawApplication extends Application {
      * Saves the user configuration to disk.
      */
     private void saveUserConfiguration(final UserConfiguration userConfiguration) throws IOException {
-        final Gson gson = new Gson();
-        final String serialized = gson.toJson(userConfiguration);
+        final String serialized = this.gson.toJson(userConfiguration);
         Files.writeString(
             FileSystemService.getUserConfigurationPath(),
             serialized,
