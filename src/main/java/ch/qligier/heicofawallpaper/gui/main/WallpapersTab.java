@@ -85,7 +85,7 @@ public class WallpapersTab extends AbstractContentTab {
     public WallpapersTab(final HoawApplication app,
                          final MainWindow window) {
         super(app, window);
-        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/wallpapers.fxml"));
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main/wallpapers.fxml"));
         loader.setController(this);
         loader.setRoot(this);
         try {

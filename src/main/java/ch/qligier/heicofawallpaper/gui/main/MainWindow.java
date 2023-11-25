@@ -46,7 +46,7 @@ public class MainWindow extends AnchorPane {
      */
     public MainWindow(final HoawApplication app) {
         this.app = app;
-        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main.fxml"));
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main/window.fxml"));
         loader.setController(this);
         loader.setRoot(this);
         try {

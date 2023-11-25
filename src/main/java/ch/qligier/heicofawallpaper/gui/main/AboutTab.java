@@ -47,7 +47,7 @@ public class AboutTab extends AbstractContentTab {
     public AboutTab(final HoawApplication app,
                     final MainWindow window) {
         super(app, window);
-        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/about.fxml"));
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main/about.fxml"));
         loader.setController(this);
         loader.setRoot(this);
         try {

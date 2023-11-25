@@ -14,7 +14,7 @@ public class ConfigurationTab extends AbstractContentTab {
     public ConfigurationTab(final HoawApplication app,
                             final MainWindow window) {
         super(app, window);
-        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/configuration.fxml"));
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main/configuration.fxml"));
         loader.setController(this);
         loader.setRoot(this);
         try {

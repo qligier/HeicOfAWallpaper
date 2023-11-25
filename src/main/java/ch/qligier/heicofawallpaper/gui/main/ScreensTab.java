@@ -34,7 +34,7 @@ public class ScreensTab extends AbstractContentTab {
     public ScreensTab(final HoawApplication app,
                       final MainWindow window) {
         super(app, window);
-        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/screens.fxml"));
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main/screens.fxml"));
         loader.setController(this);
         loader.setRoot(this);
         try {
