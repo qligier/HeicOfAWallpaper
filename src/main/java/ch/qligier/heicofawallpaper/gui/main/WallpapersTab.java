@@ -2,6 +2,7 @@ package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
+import ch.qligier.heicofawallpaper.gui.wallpaper_detail.WallpaperDetailWindow;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.model.events.WallpaperDefinitionsChanged;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
@@ -9,12 +10,15 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.greenrobot.eventbus.EventBus;
@@ -108,6 +112,12 @@ public class WallpapersTab extends AbstractContentTab {
         //this.wallpaperList.setMouseTransparent(true);
         this.wallpaperList.setFocusTraversable(false);
         this.wallpaperList.setCellFactory(list -> new WallpaperCell());
+        this.wallpaperList.setOnMouseClicked(event -> {
+            final var selectedItem = this.wallpaperList.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                this.openWallpaperDetailWindow(selectedItem);
+            }
+        });
         this.directoryInput.setText(this.app.getUserConfiguration().getWallpaperFolderPath());
 
         this.onListRefresh();
@@ -151,6 +161,16 @@ public class WallpapersTab extends AbstractContentTab {
     @Override
     public void close() {
         EventBus.getDefault().unregister(this);
+    }
+
+    protected void openWallpaperDetailWindow(final DynWallDefinition definition) {
+        final var stage = new Stage();
+        stage.setTitle("Details of X");
+        stage.initModality(Modality.NONE);
+        stage.setScene(new Scene(new WallpaperDetailWindow(this.app, definition)));
+        stage.setResizable(false);
+        stage.getIcons().add(Utils.getLogo());
+        stage.show();
     }
 
     /**
