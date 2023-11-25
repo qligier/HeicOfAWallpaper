@@ -30,6 +30,6 @@ module ch.qligier.heicofawallpaper {
     exports ch.qligier.heicofawallpaper.service;
     exports ch.qligier.heicofawallpaper.utils.win32;
     opens ch.qligier.heicofawallpaper.gui to javafx.fxml;
-    opens ch.qligier.heicofawallpaper.gui.tab to javafx.fxml, eventbus.java;
+    opens ch.qligier.heicofawallpaper.gui.main to javafx.fxml, eventbus.java;
     opens ch.qligier.heicofawallpaper.model to com.google.gson;
 }

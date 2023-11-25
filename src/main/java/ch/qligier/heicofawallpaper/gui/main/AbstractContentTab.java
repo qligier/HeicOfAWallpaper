@@ -1,7 +1,6 @@
-package ch.qligier.heicofawallpaper.gui.tab;
+package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
-import ch.qligier.heicofawallpaper.gui.MainWindow;
 import javafx.scene.layout.AnchorPane;
 
 /**

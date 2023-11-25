@@ -1,8 +1,7 @@
-package ch.qligier.heicofawallpaper.gui.tab;
+package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
-import ch.qligier.heicofawallpaper.gui.MainWindow;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.model.events.WallpaperDefinitionsChanged;
 import ch.qligier.heicofawallpaper.service.FileSystemService;

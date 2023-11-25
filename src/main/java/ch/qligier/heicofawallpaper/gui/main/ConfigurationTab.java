@@ -1,8 +1,7 @@
-package ch.qligier.heicofawallpaper.gui.tab;
+package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.Utils;
-import ch.qligier.heicofawallpaper.gui.MainWindow;
 import javafx.fxml.FXMLLoader;
 
 /**
@@ -22,7 +21,6 @@ public class ConfigurationTab extends AbstractContentTab {
             loader.load();
         } catch (final Exception exception) {
             Utils.showException(exception);
-            return;
         }
     }
 }
