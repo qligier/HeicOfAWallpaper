@@ -113,6 +113,7 @@ public class WallpapersTab extends AbstractContentTab {
         this.wallpaperList.setFocusTraversable(false);
         this.wallpaperList.setCellFactory(list -> new WallpaperCell());
         this.wallpaperList.setOnMouseClicked(event -> {
+            LOG.info("onMouseClicked");
             final var selectedItem = this.wallpaperList.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 this.openWallpaperDetailWindow(selectedItem);
@@ -164,13 +165,17 @@ public class WallpapersTab extends AbstractContentTab {
     }
 
     protected void openWallpaperDetailWindow(final DynWallDefinition definition) {
+        LOG.info("Opening wallpaper detail window");
         final var stage = new Stage();
         stage.setTitle("Details of X");
         stage.initModality(Modality.NONE);
+        LOG.info("Before new WallpaperDetailWindow");
         stage.setScene(new Scene(new WallpaperDetailWindow(this.app, definition)));
+        LOG.info("After new WallpaperDetailWindow");
         stage.setResizable(false);
         stage.getIcons().add(Utils.getLogo());
         stage.show();
+        LOG.info("Stage shown");
     }
 
     /**

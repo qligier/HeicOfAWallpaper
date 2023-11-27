@@ -2,20 +2,23 @@ package ch.qligier.heicofawallpaper.gui.wallpaper_detail;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
-import ch.qligier.heicofawallpaper.model.PhaseSolar;
-import ch.qligier.heicofawallpaper.model.PhaseTime;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.ListView;
+import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import static java.util.Objects.requireNonNull;
@@ -28,25 +31,31 @@ import static java.util.Objects.requireNonNull;
 public class WallpaperDetailWindow extends AnchorPane {
     private static final Logger LOG = Logger.getLogger("WallpaperDetailWindow");
 
+    private static final String HIGHLIGHTED_CLASS = "highlighted";
+
     private final HoawApplication app;
 
     private final DynWallDefinition definition;
 
     @FXML
     @MonotonicNonNull
-    protected ListView<FrameCell.FrameInfo> frameList;
+    protected ScrollPane frameScroll;
 
     @FXML
     @MonotonicNonNull
-    protected ListView<PhaseSolar> solarList;
+    protected VBox frameList;
 
     @FXML
     @MonotonicNonNull
-    protected ListView<PhaseTime> timeList;
+    protected VBox solarList;
 
     @FXML
     @MonotonicNonNull
-    protected ListView<AppearancePhaseCell.AppearancePhaseInfo> appearanceList;
+    protected VBox timeList;
+
+    @FXML
+    @MonotonicNonNull
+    protected VBox appearanceList;
 
     @FXML
     @MonotonicNonNull
@@ -60,8 +69,12 @@ public class WallpaperDetailWindow extends AnchorPane {
     @MonotonicNonNull
     protected Tab appearanceTab;
 
+    @Nullable
+    private Integer highlightedFrameIndex = null;
+
     public WallpaperDetailWindow(final HoawApplication app,
                                  final DynWallDefinition definition) {
+        LOG.info("WallpaperDetailWindow.constructor");
         this.app = requireNonNull(app);
         this.definition = requireNonNull(definition);
         final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/wallpaper_detail/window.fxml"));
@@ -73,78 +86,110 @@ public class WallpaperDetailWindow extends AnchorPane {
             LOG.severe("Cannot load the wallpaper detail window");
             e.printStackTrace();
         }
+        LOG.info("Loaded");
 
         // Prepare the lists
         this.frameList.setFocusTraversable(false);
-        this.frameList.setCellFactory(listView -> new FrameCell());
-        this.frameList.setItems(FXCollections.observableList(this.getFrameInfos()));
-
-        // Prepare the phases lists
-        if (definition.isSolar()) {
-            this.solarList.setFocusTraversable(false);
-            this.solarList.setCellFactory(listView -> new SolarPhaseCell());
-            this.solarList.setItems(FXCollections.observableList(requireNonNull(definition.solarPhases())));
-            this.solarList.setOnMouseClicked(event -> {
-                final var phase = this.solarList.getSelectionModel().getSelectedItem();
-                if (phase != null) {
-                    this.highlightFrame(phase.frameIndex());
-                }
-            });
-        } else {
-            this.solarTab.setDisable(true);
-        }
-
-        if (definition.isTime()) {
-            this.timeList.setFocusTraversable(false);
-            this.timeList.setCellFactory(listView -> new TimePhaseCell());
-            this.timeList.setItems(FXCollections.observableList(requireNonNull(definition.timePhases())));
-            this.timeList.setOnMouseClicked(event -> {
-                final var phase = this.timeList.getSelectionModel().getSelectedItem();
-                if (phase != null) {
-                    this.highlightFrame(phase.frameIndex());
-                }
-            });
-        } else {
-            this.timeTab.setDisable(true);
-        }
-
-        if (definition.isAppearance()) {
-            this.appearanceList.setFocusTraversable(false);
-            this.appearanceList.setCellFactory(listView -> new AppearancePhaseCell());
-            this.appearanceList.setItems(FXCollections.observableList(requireNonNull(this.getAppearancePhaseInfos())));
-            this.appearanceList.setOnMouseClicked(event -> {
-                final var phase = this.appearanceList.getSelectionModel().getSelectedItem();
-                if (phase != null) {
-                    this.highlightFrame(phase.frameIndex());
-                }
-            });
-        } else {
-            this.appearanceTab.setDisable(true);
-        }
-    }
-
-    private List<FrameCell.FrameInfo> getFrameInfos() {
-        final List<FrameCell.FrameInfo> list = new ArrayList<>(this.definition.numberOfFrames());
         for (int i = 0; i < this.definition.numberOfFrames(); i++) {
             final String frameFilename = String.format("frame-%d.jpg", i);
             final Path framePath = FileSystemService.getDataPath()
                 .resolve(this.definition.fileHash())
                 .resolve(frameFilename);
-            list.add(new FrameCell.FrameInfo(i, framePath.toString()));
+            this.addFrame(i, framePath.toString());
         }
-        return list;
+        LOG.info("Frame list prepared");
+
+        // Prepare the phases lists
+        if (definition.isSolar()) {
+            for (final var phase : definition.solarPhases()) {
+                this.addSolarPhase();
+            }
+            this.solarList.setOnMouseClicked(event -> {
+                LOG.info("Clicked on solar phase");
+            });
+        } else {
+            this.solarTab.setDisable(true);
+        }
+        LOG.info("Solar list prepared");
+
+        if (definition.isTime()) {
+            for (final var phase : definition.timePhases()) {
+                this.addTimePhase(phase.frameIndex(), phase.time().toString());
+            }
+            this.timeList.setOnMouseClicked(event -> {
+                LOG.info("Clicked on time phase");
+            });
+        } else {
+            this.timeTab.setDisable(true);
+        }
+        LOG.info("Time list prepared");
+
+        if (definition.isAppearance()) {
+            this.addAppearancePhase(definition.appearancePhase().lightFrameIndex(), "Light");
+            this.addAppearancePhase(definition.appearancePhase().darkFrameIndex(), "Dark");
+            this.appearanceList.setOnMouseClicked(event -> {
+                LOG.info("Clicked on appearance phase");
+            });
+        } else {
+            this.appearanceTab.setDisable(true);
+        }
+        LOG.info("Appearance list prepared");
     }
 
-    private List<AppearancePhaseCell.AppearancePhaseInfo> getAppearancePhaseInfos() {
-        requireNonNull(this.definition.appearancePhase());
-        return List.of(new AppearancePhaseCell.AppearancePhaseInfo("Light",
-                                                                   this.definition.appearancePhase().lightFrameIndex()),
-                       new AppearancePhaseCell.AppearancePhaseInfo("Dark",
-                                                                   this.definition.appearancePhase().darkFrameIndex()));
+    private void highlightFrame(final @Nullable Integer frameIndex) {
+        if (this.highlightedFrameIndex != null) {
+            this.frameList.getChildren().get(this.highlightedFrameIndex).getStyleClass().remove(HIGHLIGHTED_CLASS);
+        }
+        this.highlightedFrameIndex = frameIndex;
+        if (frameIndex != null) {
+            final var node = this.frameList.getChildren().get(frameIndex);
+            final Bounds viewportBounds = this.frameScroll.getViewportBounds();
+            final Bounds contentBounds = node.getBoundsInLocal();
+            LOG.info("Viewport bounds: %s".formatted(viewportBounds));
+            LOG.info("Content bounds: %s".formatted(contentBounds));
+            node.getStyleClass().add(HIGHLIGHTED_CLASS);
+            //V: position.getY() / (contentBounds.getHeight() - viewportBounds.getHeight())
+        }
     }
 
-    private void highlightFrame(final int frameIndex) {
-        this.frameList.getSelectionModel().select(frameIndex);
-        this.frameList.scrollTo(frameIndex);
+    private void addFrame(final int frameIndex,
+                          final String framePath) {
+        final var hBox = new HBox();
+        hBox.getStyleClass().add("frameHbox");
+        hBox.setAlignment(Pos.CENTER_LEFT);
+
+        // Show the frame
+        final var preview = new ImageView(new Image(framePath, 128, 72, false, true, false));
+        preview.setFitWidth(128);
+        preview.setFitHeight(72);
+        hBox.getChildren().add(preview);
+
+        // Show the frame index
+        final var text = new Text("Frame %d".formatted(frameIndex));
+        text.getStyleClass().add("frameText");
+        text.setStyle("-fx-text-fill: #008000; -fx-font-size: 16px;");
+        hBox.getChildren().add(text);
+
+        this.frameList.getChildren().add(hBox);
+    }
+
+    private void addSolarPhase() {
+
+    }
+
+    private void addTimePhase(final int frameIndex,
+                              final String time) {
+        final var text = new Text("Showing frame %d at %s".formatted(frameIndex, time));
+        text.setOnMouseEntered(event -> this.highlightFrame(frameIndex));
+        text.setOnMouseExited(event -> this.highlightFrame(null));
+        this.timeList.getChildren().add(text);
+    }
+
+    private void addAppearancePhase(final int frameIndex,
+                                    final String appearanceName) {
+        final var text = new Text("%s: showing frame %d".formatted(appearanceName, frameIndex));
+        text.setOnMouseEntered(event -> this.highlightFrame(frameIndex));
+        text.setOnMouseExited(event -> this.highlightFrame(null));
+        this.appearanceList.getChildren().add(text);
     }
 }

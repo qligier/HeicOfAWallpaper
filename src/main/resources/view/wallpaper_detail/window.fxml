@@ -5,26 +5,33 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 <fx:root xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-         minWidth="-Infinity" stylesheets="@../../css/main.css"
-         prefHeight="709.0" prefWidth="709.0" xmlns="http://javafx.com/javafx/18" type="javafx.scene.layout.AnchorPane">
+         minWidth="-Infinity"
+         prefHeight="709.0" prefWidth="709.0"
+         stylesheets="@../../css/main.css, @wallpaper_detail.css" type="javafx.scene.layout.AnchorPane"
+         xmlns="http://javafx.com/javafx/18">
     <children>
         <VBox prefHeight="709.0" prefWidth="709.0">
             <children>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Definition of X" wrappingWidth="709.13671875">
+                <Text id="title" strokeType="OUTSIDE" strokeWidth="0.0" text="Definition of X"
+                      wrappingWidth="709.13671875">
                     <font>
                         <Font size="29.0"/>
                     </font>
                 </Text>
                 <HBox prefHeight="658.0" prefWidth="709.0">
                     <children>
-                        <ListView fx:id="frameList" prefHeight="658.0" prefWidth="340.0"/>
+                        <ScrollPane fx:id="frameScroll" hbarPolicy="NEVER" prefHeight="666.0" prefWidth="339.0">
+                            <content>
+                                <VBox id="frameList" fx:id="frameList" prefHeight="658.0" prefWidth="340.0"/>
+                            </content>
+                        </ScrollPane>
                         <TabPane prefHeight="658.0" prefWidth="370.0" tabClosingPolicy="UNAVAILABLE">
                             <tabs>
                                 <Tab fx:id="solarTab" text="Solar">
                                     <content>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                             <children>
-                                                <ListView fx:id="solarList" prefHeight="629.0" prefWidth="370.0"/>
+                                                <VBox fx:id="solarList" prefHeight="629.0" prefWidth="370.0"/>
                                             </children>
                                         </AnchorPane>
                                     </content>
@@ -33,7 +40,7 @@
                                     <content>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                             <children>
-                                                <ListView fx:id="timeList" prefHeight="632.0" prefWidth="370.0"/>
+                                                <VBox fx:id="timeList" prefHeight="632.0" prefWidth="370.0"/>
                                             </children>
                                         </AnchorPane>
                                     </content>
@@ -42,7 +49,7 @@
                                     <content>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                             <children>
-                                                <ListView fx:id="appearanceList" prefHeight="630.0" prefWidth="370.0"/>
+                                                <VBox fx:id="appearanceList" prefHeight="630.0" prefWidth="370.0"/>
                                             </children>
                                         </AnchorPane>
                                     </content>

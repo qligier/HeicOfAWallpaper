@@ -1,0 +1,23 @@
+#title {
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 0 0 1 0;
+}
+
+#frameList {
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 0 1 0 0;
+}
+
+.frameHbox {
+    -fx-padding: 10 10 10 10;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 0 0 1 0;
+    -fx-spacing: 20;
+}
+
+.frameText {
+}
+
+.highlighted {
+    -fx-background-color: #d0d0d0;
+}
