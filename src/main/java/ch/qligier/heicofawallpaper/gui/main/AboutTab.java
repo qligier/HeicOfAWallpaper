@@ -1,8 +1,8 @@
 package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
-import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.configuration.StaticConfiguration;
+import ch.qligier.heicofawallpaper.utils.Utils;
 import com.sandec.mdfx.MarkdownView;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

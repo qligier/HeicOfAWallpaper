@@ -1,11 +1,13 @@
 package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
-import ch.qligier.heicofawallpaper.Utils;
+import ch.qligier.heicofawallpaper.gui.javafx.MiniatureImageView;
+import ch.qligier.heicofawallpaper.gui.javafx.SvgUtils;
 import ch.qligier.heicofawallpaper.gui.wallpaper_detail.WallpaperDetailWindow;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.model.events.WallpaperDefinitionsChanged;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
+import ch.qligier.heicofawallpaper.utils.Utils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -38,49 +40,43 @@ import java.util.logging.Logger;
 @SuppressWarnings("java:S110")
 public class WallpapersTab extends AbstractContentTab {
     private static final Logger LOG = Logger.getLogger("WallpapersTab");
-
+    private final Image searchIcon;
     /**
      * The input field to select the wallpaper directory. Read-only display.
      */
     @FXML
     @MonotonicNonNull
     protected TextField directoryInput;
-
     /**
      * The button to open the wallpaper directory selection dialog.
      */
     @FXML
     @MonotonicNonNull
     protected Button selectButton;
-
     /**
      * The button to refresh the wallpaper definitions in the directory.
      */
     @FXML
     @MonotonicNonNull
     protected Button refreshButton;
-
     /**
      * The list title.
      */
     @FXML
     @MonotonicNonNull
     protected Text title;
-
     /**
      * The select input to filter wallpapers by their type.
      */
     @FXML
     @MonotonicNonNull
     protected ChoiceBox<TypeFilter> typeChooser;
-
     /**
      * The GUI list of wallpaper definitions. See {@link WallpaperCell} for the rendering of each item.
      */
     @FXML
     @MonotonicNonNull
     protected ListView<DynWallDefinition> wallpaperList;
-
     /**
      * The type filter currently selected.
      */
@@ -96,11 +92,12 @@ public class WallpapersTab extends AbstractContentTab {
             loader.load();
         } catch (final Exception exception) {
             Utils.showException(exception);
-            return;
         }
 
         // Register this class for some events
         EventBus.getDefault().register(this);
+
+        this.searchIcon = SvgUtils.loadFromResource("/icon/search.svg");
 
         // GUI configuration
         this.typeChooser.getItems().addAll(TypeFilter.values());
@@ -210,7 +207,7 @@ public class WallpapersTab extends AbstractContentTab {
         }
     }
 
-    private static class WallpaperCell extends ListCell<DynWallDefinition> {
+    private class WallpaperCell extends ListCell<DynWallDefinition> {
         @Override
         protected void updateItem(final @Nullable DynWallDefinition entry,
                                   final boolean empty) {
@@ -224,10 +221,7 @@ public class WallpapersTab extends AbstractContentTab {
 
             // Display the preview thumbnail
             final String previewUrl = cachePath.resolve(FileSystemService.PREVIEW_FILE_NAME).toString();
-            final ImageView preview = new ImageView(new Image(previewUrl));
-            preview.setFitWidth(128);
-            preview.setFitHeight(72);
-            hBox.getChildren().add(preview);
+            hBox.getChildren().add(new MiniatureImageView(previewUrl, 128, 72));
 
             // Wallpaper type
             /*final String iconName = switch (entry.type()) {
@@ -243,6 +237,11 @@ public class WallpapersTab extends AbstractContentTab {
 
             // Wallpaper filename
             hBox.getChildren().add(new Text(entry.filename()));
+
+            final var searchIconView = new ImageView(SvgUtils.loadFromResource("/icon/search.svg"));
+            searchIconView.setFitHeight(32);
+            searchIconView.setFitWidth(32);
+            hBox.getChildren().add(searchIconView);
 
             setGraphic(hBox);
         }

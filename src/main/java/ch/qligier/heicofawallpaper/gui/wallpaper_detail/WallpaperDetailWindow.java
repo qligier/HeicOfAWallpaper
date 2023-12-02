@@ -1,6 +1,7 @@
 package ch.qligier.heicofawallpaper.gui.wallpaper_detail;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
+import ch.qligier.heicofawallpaper.gui.javafx.MiniatureImageView;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 import javafx.fxml.FXML;
@@ -9,8 +10,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -159,10 +158,7 @@ public class WallpaperDetailWindow extends AnchorPane {
         hBox.setAlignment(Pos.CENTER_LEFT);
 
         // Show the frame
-        final var preview = new ImageView(new Image(framePath, 128, 72, false, true, false));
-        preview.setFitWidth(128);
-        preview.setFitHeight(72);
-        hBox.getChildren().add(preview);
+        hBox.getChildren().add(new MiniatureImageView(framePath, 128, 72));
 
         // Show the frame index
         final var text = new Text("Frame %d".formatted(frameIndex));

@@ -1,7 +1,7 @@
 package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
-import ch.qligier.heicofawallpaper.Utils;
+import ch.qligier.heicofawallpaper.utils.Utils;
 import javafx.fxml.FXMLLoader;
 
 /**

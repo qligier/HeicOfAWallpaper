@@ -14,6 +14,7 @@ import ch.qligier.heicofawallpaper.service.DynamicWallpaperService;
 import ch.qligier.heicofawallpaper.service.FileSystemService;
 import ch.qligier.heicofawallpaper.service.PhaseEvaluator;
 import ch.qligier.heicofawallpaper.utils.LocalTimeAdapter;
+import ch.qligier.heicofawallpaper.utils.Utils;
 import ch.qligier.heicofawallpaper.utils.heic.MetadataExtractor;
 import ch.qligier.heicofawallpaper.utils.heic.PreviewGenerator;
 import ch.qligier.heicofawallpaper.utils.win32.DesktopWallpaperManager;
@@ -83,30 +84,35 @@ public class HoawApplication extends Application {
     @MonotonicNonNull
     private final ObservableList<DynWallDefinition> wallpaperDefinitions =
         FXCollections.observableList(new ArrayList<>(8));
+
     /**
      * The main JavaFX stage. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private Stage mainStage;
+
     /**
      * The application window, if it is opened.
      */
     @Nullable
     private Stage appWindow;
+
     /**
      * The runtime configuration. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private RuntimeConfiguration runtimeConfiguration;
+
     /**
      * The user configuration. The field is assigned in {@link #start(Stage)}.
      */
     @MonotonicNonNull
     private UserConfiguration userConfiguration;
+
     /**
      * The field is assigned in {@link #start(Stage)}.
      */
-    @MonotonicNonNull
+    @Nullable
     private DesktopWallpaperManager desktopWallpaperManager;
 
     /**
@@ -128,6 +134,7 @@ public class HoawApplication extends Application {
      */
     @Override
     public void start(final Stage stage) {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
         this.mainStage = stage;
 
         EventBus.builder()
@@ -159,6 +166,22 @@ public class HoawApplication extends Application {
         this.openAppWindow();
     }
 
+    /**
+     * Clean up the various threads/connections we opened.
+     */
+    @Override
+    public void stop() {
+        this.metadataExtractor.close();
+        if (this.desktopWallpaperManager != null) {
+            this.desktopWallpaperManager.Release();
+            this.desktopWallpaperManager = null;
+        }
+        Ole32.INSTANCE.CoUninitialize();
+    }
+
+    /**
+     * Closes the main application window.
+     */
     public void closeAppWindow() {
         if (this.appWindow == null) {
             return;

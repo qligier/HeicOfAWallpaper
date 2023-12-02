@@ -1,11 +1,11 @@
 package ch.qligier.heicofawallpaper.gui.main;
 
 import ch.qligier.heicofawallpaper.HoawApplication;
-import ch.qligier.heicofawallpaper.Utils;
 import ch.qligier.heicofawallpaper.configuration.RuntimeConfiguration;
 import ch.qligier.heicofawallpaper.model.DynWallDefinition;
 import ch.qligier.heicofawallpaper.model.DynWallSelection;
 import ch.qligier.heicofawallpaper.model.DynWallType;
+import ch.qligier.heicofawallpaper.utils.Utils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ChoiceBox;

@@ -79,6 +79,11 @@
             <artifactId>FXTrayIcon</artifactId>
             <version>4.0.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.weisj</groupId>
+            <artifactId>jsvg</artifactId>
+            <version>1.3.0</version>
+        </dependency>
 
         <!-- A JSON de/ser library -->
         <dependency>

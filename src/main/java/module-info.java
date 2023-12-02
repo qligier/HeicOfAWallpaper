@@ -6,6 +6,7 @@ module ch.qligier.heicofawallpaper {
     requires javafx.base;
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.swing;
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
     requires com.sandec.mdfx;
@@ -21,6 +22,7 @@ module ch.qligier.heicofawallpaper {
     requires org.checkerframework.checker.qual;
     requires com.google.gson;
     requires eventbus.java;
+    requires com.github.weisj.jsvg;
 
     exports ch.qligier.heicofawallpaper;
     exports ch.qligier.heicofawallpaper.configuration;
@@ -33,4 +35,5 @@ module ch.qligier.heicofawallpaper {
     opens ch.qligier.heicofawallpaper.gui.main to javafx.fxml, eventbus.java;
     opens ch.qligier.heicofawallpaper.gui.wallpaper_detail to javafx.fxml;
     opens ch.qligier.heicofawallpaper.model to com.google.gson;
+    exports ch.qligier.heicofawallpaper.utils;
 }
